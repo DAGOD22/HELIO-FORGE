@@ -12,3 +12,11 @@ export function orbitalPosition(p,date){
  const r=Math.hypot(X,Y,Z), scale=(3.4+Math.sqrt(r)*5)/r;
  return [X*scale,Z*scale,Y*scale];
 }
+
+// Illustrative lunar phase: approximate sidereal period and ecliptic inclination,
+// with an arbitrary epoch phase. Render distance is deliberately compressed.
+export function illustrativeMoonPosition(date) {
+ const days=(date.getTime()-Date.UTC(2000,0,1,12))/86400000;
+ const a=days/27.321661*Math.PI*2, inclination=5.145*Math.PI/180, distance=2.2;
+ return [Math.cos(a)*distance,Math.sin(a)*distance*Math.sin(inclination),Math.sin(a)*distance*Math.cos(inclination)];
+}
