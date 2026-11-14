@@ -42,3 +42,25 @@ test('curated deep-sky pointings retain source distances and map to the correct 
  assert.equal(DEEP_SKY_BY_ID['dso:hercules'].distanceLy,25000);
  assert.equal(DEEP_SKY_IMAGES.pleiades,undefined);
 });
+
+test('optional HYG shell has expected count, range, identities and ordering',async()=>{
+ const inner=JSON.parse(await readFile(new URL('../public/data/hyg-nearby-20pc.json',import.meta.url)));
+ const outer=JSON.parse(await readFile(new URL('../public/data/hyg-shell-20-50pc.json',import.meta.url)));
+ assert.equal(outer.length,6849);const all=[...inner,...outer];assert.equal(new Set(all.map(s=>s.id)).size,8749);
+ assert.ok(outer.every(s=>s.dist>20&&s.dist<=50&&s.ra>=0&&s.ra<24&&s.dec>=-90&&s.dec<=90));
+ assert.ok(all.every((s,i)=>!i||s.dist>=all[i-1].dist));
+ const aldebaran=outer.find(s=>s.name==='Aldebaran'),regulus=outer.find(s=>s.name==='Regulus');
+ assert.equal(aldebaran.id,21368);assert.equal(aldebaran.hip,'21421');assert.equal(aldebaran.dist,20.4332);assert.equal(aldebaran.absmag,-.682);assert.equal(aldebaran.ci,1.538);assert.equal(regulus.hip,'49669');
+});
+test('color magnitude coordinates and catalogue filtering preserve missing values',async()=>{
+ const {chartable,chartPosition,matchesStar,spectralGroup,validStarShell}=await import('../src/starCatalog.js');
+ const inner=JSON.parse(await readFile(new URL('../public/data/hyg-nearby-20pc.json',import.meta.url)));
+ const outer=JSON.parse(await readFile(new URL('../public/data/hyg-shell-20-50pc.json',import.meta.url)));
+ const stars=[...inner,...outer],s=stars.find(x=>x.name==='Aldebaran');
+ assert.equal(validStarShell(outer,inner),true);assert.equal(validStarShell([],inner),false);assert.equal(validStarShell([inner[0]],inner),false);assert.equal(validStarShell([{...outer[0],ra:Infinity}],inner),false);assert.equal(validStarShell([outer[0],outer[0]],inner),false);
+ assert.equal(stars.filter(chartable).length,7874);assert.equal(chartable({ci:null,absmag:1}),false);assert.equal(chartable({ci:1,absmag:NaN}),false);assert.equal(chartPosition({ci:1,absmag:21}),null);
+ assert.deepEqual(chartPosition({ci:-.5,absmag:-5}),[0,0]);assert.deepEqual(chartPosition({ci:3,absmag:20}),[1,1]);
+ assert.equal(spectralGroup(s),'K');assert.equal(spectralGroup({spect:null}),'other');assert.equal(spectralGroup({spect:'sdM'}),'other');
+ for(const query of ['aldebaran','HIP 21421','HD 29139','Gl 171.1A','87Alp Tau','HYG 21368'])assert.equal(matchesStar(s,query),true,query);
+ assert.equal(matchesStar(s,'aldebaran','M'),false);assert.equal(matchesStar(s,'aldebaran','K'),true);
+});
