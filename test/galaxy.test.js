@@ -73,3 +73,9 @@ test('nearest-neighbor guides use static HYG 3D separations and the loaded subse
  assert.deepEqual(closestCatalogStars(proxima,[proxima],5),[]);assert.deepEqual(closestCatalogStars(null,stars),[]);assert.deepEqual(closestCatalogStars(proxima,stars,0),[]);
  const identical={...proxima,id:999999};assert.equal(closestCatalogStars(proxima,[identical],1)[0].distanceLy,0);
 });
+
+test('dense illustrative galaxy supports a million-point budget without invalid coordinates',()=>{
+ const data=schematicGalaxy(1200000,81024);
+ assert.equal(data.positions.length,3600000);assert.equal(data.colors.length,3600000);
+ for(let i=0;i<data.positions.length;i+=1379){assert.ok(Number.isFinite(data.positions[i]));assert.ok(data.colors[i]>=0&&data.colors[i]<=1)}
+});

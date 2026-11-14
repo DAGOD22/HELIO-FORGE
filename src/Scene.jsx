@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
+import {attachZoomBoundary} from './zoomBoundary';
 import {planets,allObjects} from './data';
 import {MINOR_BODIES} from './minorBodies';
 import {LIVE_MOONS,interpolateTrack} from './liveMoons';
@@ -103,9 +104,9 @@ function makeGlowTexture() {
  ctx.fillStyle=gradient;ctx.fillRect(0,0,256,256);return new THREE.CanvasTexture(canvas);
 }
 
-export default function Scene({selected,onSelect,date,settings,overview,smallBody,snapshot,cinematic}) {
+export default function Scene({selected,onSelect,date,settings,overview,smallBody,snapshot,cinematic,onZoomOut}) {
  const mount=useRef(), state=useRef({});
- useEffect(()=>{state.current={selected,date,settings,overview,smallBody,snapshot,cinematic}},[selected,date,settings,overview,smallBody,snapshot,cinematic]);
+ useEffect(()=>{state.current={selected,date,settings,overview,smallBody,snapshot,cinematic,onZoomOut}},[selected,date,settings,overview,smallBody,snapshot,cinematic,onZoomOut]);
  useEffect(()=>{
   const el=mount.current, scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(36,1,.01,2000);
   camera.position.set(0,5,18);
@@ -205,6 +206,7 @@ export default function Scene({selected,onSelect,date,settings,overview,smallBod
   function pointerDown(e){down=[e.clientX,e.clientY]}
   function click(e){if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const r=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);const hit=ray.intersectObjects([sun,plutoSurface,...Object.keys(MINOR_BODIES).map(id=>objects[id].userData.mesh),...Object.keys(SATELLITES).map(id=>objects[id]),...Object.keys(LIVE_MOONS).map(id=>objects[id]).filter(Boolean),...planets.map(p=>objects[p.id].userData.mesh),...(objects['small-body']?[objects['small-body'].userData.mesh]:[])].filter(o=>o.visible&&o.parent?.visible!==false));if(hit.length)onSelect(hit[0].object.userData.id)}
   renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',click);
+  const detachZoom=attachZoomBoundary(renderer.domElement,controls,{direction:'out',canEnter:()=>true,onEnter:()=>state.current.onZoomOut()});
   const resize=()=>{const w=el.clientWidth,h=el.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)};window.addEventListener('resize',resize);const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(el);resize();
   let frame,lastSelected='',lastOverview=-1,lastQuality='',lastOrbitYear=null,lastSatUpdate=null,lastPlutoUpdate=null,lastGuideKey='',previousSmallBody=null,smallBodyOrbit=null,smallBodyLine=null,transition=0,offset=new THREE.Vector3(),target=new THREE.Vector3(),desired=new THREE.Vector3(),worldPos=new THREE.Vector3(),lastWorld=new THREE.Vector3(),lastFrame=performance.now();
   function animate(){
@@ -270,7 +272,7 @@ export default function Scene({selected,onSelect,date,settings,overview,smallBod
    controls.update();renderer.render(scene,camera);
   }
   animate();
-  return()=>{cancelAnimationFrame(frame);window.removeEventListener('resize',resize);resizeObserver.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',click);controls.dispose();detailController.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});Object.values(sphereGeometries).forEach(g=>g.dispose());textures.forEach(t=>t.dispose());renderer.dispose();el.removeChild(renderer.domElement)};
+  return()=>{cancelAnimationFrame(frame);window.removeEventListener('resize',resize);resizeObserver.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',click);detachZoom();controls.dispose();detailController.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});Object.values(sphereGeometries).forEach(g=>g.dispose());textures.forEach(t=>t.dispose());renderer.dispose();el.removeChild(renderer.domElement)};
  },[]);
  return <div className="scene" ref={mount} aria-label="Interactive three dimensional solar system. Drag to rotate and scroll to zoom."/>;
 }

@@ -1,6 +1,7 @@
 import React,{useEffect,useRef} from 'react';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
+import {attachZoomBoundary} from './zoomBoundary';
 import {allObjects,planets} from './data';
 import {SATELLITES,allSatelliteEclipticPositions,plutoEclipticPosition} from './satellites';
 import {LIVE_MOONS,interpolateTrack} from './liveMoons';
@@ -15,13 +16,13 @@ function labelTexture(text){const c=document.createElement('canvas');c.width=256
 
 // Positions and radii are in AU. The render origin follows the current focus;
 // coordinate subtraction is performed in JS double precision in Three's scene graph.
-export default function ScaleScene({selected,onSelect,date,settings,overview,smallBody,snapshot,cinematic}){
+export default function ScaleScene({selected,onSelect,date,settings,overview,smallBody,snapshot,cinematic,onZoomOut}){
  const mount=useRef(),state=useRef({});
- useEffect(()=>{state.current={selected,date,settings,overview,smallBody,snapshot,cinematic}},[selected,date,settings,overview,smallBody,snapshot,cinematic]);
+ useEffect(()=>{state.current={selected,date,settings,overview,smallBody,snapshot,cinematic,onZoomOut}},[selected,date,settings,overview,smallBody,snapshot,cinematic,onZoomOut]);
  useEffect(()=>{
   const el=mount.current,scene=new THREE.Scene(),root=new THREE.Group(),camera=new THREE.PerspectiveCamera(36,1,1e-11,2000);scene.add(root);
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,logarithmicDepthBuffer:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;el.appendChild(renderer.domElement);
-  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.enablePan=true;controls.minDistance=1e-10;controls.maxDistance=400;
+  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.enablePan=true;controls.minDistance=1e-10;controls.maxDistance=200;controls.zoomSpeed=4;
   scene.add(new THREE.AmbientLight(0xabb9c7,.35));root.add(new THREE.PointLight(0xfff6e7,1.6,0,0));
   const loader=new THREE.TextureLoader(),textures=[],objects={},positions={},lines=[],meshes=[],radiusById={},detailTargets={},geometry=new THREE.SphereGeometry(1,64,40);const skyMap=makeArtisticSky(loader,textures),catalogSky=makeCatalogSky(loader,textures,renderer.capabilities.maxTextureSize),darkSky=new THREE.Color('#030812');scene.background=catalogSky;scene.backgroundIntensity=.48;
   function texture(file){const t=loader.load('/textures/'+file);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());textures.push(t);return t;}
@@ -53,6 +54,7 @@ export default function ScaleScene({selected,onSelect,date,settings,overview,sma
   function pointerDown(e){down=[e.clientX,e.clientY]}
   function click(e){if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const box=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-box.left)/box.width*2-1,-(e.clientY-box.top)/box.height*2+1);ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(meshes.filter(m=>m.visible&&m.parent?.visible!==false));if(hits.length)onSelect(hits[0].object.userData.id)}
   renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',click);
+  const detachZoom=attachZoomBoundary(renderer.domElement,controls,{direction:'out',canEnter:()=>true,onEnter:()=>state.current.onZoomOut()});
   const resize=()=>{const w=el.clientWidth,h=el.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)};window.addEventListener('resize',resize);const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(el);resize();
   let frame,lastQuality='',lastYear=null,lastSecond=null,lastFocus='',lastOverview=-1,oldAnchor=new THREE.Vector3(),fly=null,lastFrame=performance.now(),previousSmall=null,smallOrbit=null,smallLine=null;
   controls.addEventListener('start',()=>{fly=null});
@@ -91,7 +93,7 @@ export default function ScaleScene({selected,onSelect,date,settings,overview,sma
    controls.update();renderer.render(scene,camera);
   }
   animate();
-  return()=>{cancelAnimationFrame(frame);window.removeEventListener('resize',resize);resizeObserver.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',click);controls.dispose();detailController.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});textures.forEach(t=>t.dispose());renderer.dispose();el.removeChild(renderer.domElement);};
+  return()=>{cancelAnimationFrame(frame);window.removeEventListener('resize',resize);resizeObserver.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',click);detachZoom();controls.dispose();detailController.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});textures.forEach(t=>t.dispose());renderer.dispose();el.removeChild(renderer.domElement);};
  },[]);
  return <div className="scene" ref={mount} aria-label="Physical-scale three dimensional solar system. Drag to rotate and scroll to zoom."/>;
 }
