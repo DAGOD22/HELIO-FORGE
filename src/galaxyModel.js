@@ -12,11 +12,12 @@ export function equatorialToGalactic(raHours,decDegrees,distanceLy){
  const v=[Math.cos(dec)*Math.cos(ra),Math.cos(dec)*Math.sin(ra),Math.sin(dec)];
  return EQUATORIAL_TO_GALACTIC.map(row=>distanceLy*row.reduce((sum,n,i)=>sum+n*v[i],0));
 }
-export function starPositionLy(star){
- const [x,y,z]=equatorialToGalactic(star.ra,star.dec,star.dist*LIGHT_YEARS_PER_PARSEC);
+export function positionFromEquatorialLy(ra,dec,distanceLy){
+ const [x,y,z]=equatorialToGalactic(ra,dec,distanceLy);
  // Sun at +X; galactic north is +Y in Three.js.
  return [SUN_GALACTIC_RADIUS_LY-x,z,y];
 }
+export function starPositionLy(star){return positionFromEquatorialLy(star.ra,star.dec,star.dist*LIGHT_YEARS_PER_PARSEC);}
 // Procedural illustration only; particles are not a stellar catalogue or a fitted map.
 export function schematicGalaxy(count=38000,seed=81024){
  const positions=new Float32Array(count*3),colors=new Float32Array(count*3);
