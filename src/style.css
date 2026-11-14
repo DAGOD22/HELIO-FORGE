@@ -14,3 +14,4 @@
 .snapshot-status{font-size:10px;line-height:1.5;color:#a6c7d5;background:#10232e;border:1px solid #34505d;padding:9px;margin:0 0 12px}.snapshot-status .primary{margin-top:6px}@media(max-width:750px){.snapshot-status{font-size:9px;padding:6px}}
 /* Keep all time controls reachable on narrow screens by swiping the timeline. */
 @media(max-width:750px){.timeline{overflow-x:auto;overscroll-behavior-x:contain}.time-label,.time-controls,.speed,.date-control{flex:none}.date-control{display:block;padding-left:10px}.date-control input{font-size:9px}}
+@media(max-width:750px){.center-caption{width:calc(100% - 28px);white-space:normal}.center-caption p{line-height:1.6}.render-disclosure{line-height:1.45}}

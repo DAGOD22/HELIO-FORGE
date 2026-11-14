@@ -44,11 +44,12 @@ export function renderPosition([x,y,z]) {
  // Map ecliptic north to +Y while preserving a right-handed frame.
  return [x*scale,z*scale,-y*scale];
 }
+export function eclipticToScene([x,y,z]){return [x,z,-y];}
 export function orbitalPosition(p,date){return renderPosition(heliocentricPosition(p,date));}
 // Freeze elements at the chosen date to draw a closed osculating-style guide;
 // the guide is not the precise future trajectory when the fitted elements change.
-export function orbitalPath(p,date,segments=256){
- const values=elements(p.id,date);return Array.from({length:segments+1},(_,j)=>renderPosition(positionFromAnomaly(values,j/segments*Math.PI*2)));
+export function orbitalPath(p,date,segments=256,physical=false){
+ const values=elements(p.id,date),transform=physical?eclipticToScene:renderPosition;return Array.from({length:segments+1},(_,j)=>transform(positionFromAnomaly(values,j/segments*Math.PI*2)));
 }
 // JPL SBDB osculating elliptical elements propagated as an unperturbed two-body orbit.
 // The epoch and element names are those supplied by SBDB; accuracy degrades away from epoch.
@@ -65,7 +66,7 @@ export function smallBodyHeliocentricPosition(orbit,date) {
  const values=[orbit.a,orbit.e,orbit.i,0,orbit.w+orbit.om,orbit.om];
  return positionFromAnomaly(values,(orbit.ma+orbit.n*(jd-orbit.epoch))*RAD);
 }
-export function smallBodyPath(orbit,segments=256) {
- const values=[orbit.a,orbit.e,orbit.i,0,orbit.w+orbit.om,orbit.om];
- return Array.from({length:segments+1},(_,j)=>renderPosition(positionFromAnomaly(values,j/segments*Math.PI*2)));
+export function smallBodyPath(orbit,segments=256,physical=false) {
+ const values=[orbit.a,orbit.e,orbit.i,0,orbit.w+orbit.om,orbit.om],transform=physical?eclipticToScene:renderPosition;
+ return Array.from({length:segments+1},(_,j)=>transform(positionFromAnomaly(values,j/segments*Math.PI*2)));
 }
