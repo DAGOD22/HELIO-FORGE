@@ -10,7 +10,7 @@ export const EXOPLANET_HOSTS=[
 ];
 export const HOST_BY_ID=Object.fromEntries(EXOPLANET_HOSTS.map(h=>[h.id,h]));
 export const HOST_BY_HYG=Object.fromEntries(EXOPLANET_HOSTS.map(h=>[String(h.hygId),h]));
-export const EXOPLANET_COLUMNS=['pl_name','hostname','pl_orbper','pl_orbpererr1','pl_orbpererr2','pl_orbperlim','pl_orbsmax','pl_orbsmaxerr1','pl_orbsmaxerr2','pl_orbsmaxlim','pl_rade','pl_radeerr1','pl_radeerr2','pl_radelim','pl_bmasse','pl_bmasseerr1','pl_bmasseerr2','pl_bmasselim','pl_bmassprov','discoverymethod','disc_year','ra','dec','sy_dist'];
+export const EXOPLANET_COLUMNS=['pl_name','hostname','pl_orbper','pl_orbpererr1','pl_orbpererr2','pl_orbperlim','pl_orbsmax','pl_orbsmaxerr1','pl_orbsmaxerr2','pl_orbsmaxlim','pl_rade','pl_radeerr1','pl_radeerr2','pl_radelim','pl_bmasse','pl_bmasseerr1','pl_bmasseerr2','pl_bmasselim','pl_bmassprov','discoverymethod','disc_year','ra','dec','sy_dist','pl_refname','pl_controv_flag','soltype'];
 export function exoplanetQuery(hostId){
  const host=Object.hasOwn(HOST_BY_ID,hostId)?HOST_BY_ID[hostId]:null;if(!host)throw new Error('Unsupported host');
  return `select ${EXOPLANET_COLUMNS.join(',')} from ps where default_flag=1 and hostname='${host.host}' order by pl_orbper`;
@@ -21,7 +21,9 @@ export function validateExoplanetRows(rows,hostId){
  for(const row of rows){
   if(!row||typeof row!=='object'||row.hostname!==host.host||typeof row.pl_name!=='string'||!row.pl_name||names.has(row.pl_name))throw new Error('Invalid planet record');
   names.add(row.pl_name);
-  for(const key of EXOPLANET_COLUMNS){if(!Object.hasOwn(row,key))throw new Error('Incomplete planet record');if(['pl_name','hostname','pl_bmassprov','discoverymethod'].includes(key)){if(row[key]!=null&&typeof row[key]!=='string')throw new Error('Invalid text field');}else if(row[key]!=null&&(typeof row[key]!=='number'||!Number.isFinite(row[key])))throw new Error('Invalid numeric field');}
+  if(row.pl_controv_flag!=null&&row.pl_controv_flag!==0&&row.pl_controv_flag!==1)throw new Error('Invalid controversy flag');
+  for(const key of ['pl_orbperlim','pl_orbsmaxlim','pl_radelim','pl_bmasselim'])if(row[key]!=null&&![-1,0,1].includes(row[key]))throw new Error('Invalid limit flag');
+  for(const key of EXOPLANET_COLUMNS){if(!Object.hasOwn(row,key))throw new Error('Incomplete planet record');if(['pl_name','hostname','pl_bmassprov','discoverymethod','pl_refname','soltype'].includes(key)){if(row[key]!=null&&typeof row[key]!=='string')throw new Error('Invalid text field');}else if(row[key]!=null&&(typeof row[key]!=='number'||!Number.isFinite(row[key])))throw new Error('Invalid numeric field');}
  }
  return rows;
 }

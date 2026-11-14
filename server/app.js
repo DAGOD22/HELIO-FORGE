@@ -46,7 +46,7 @@ export function createApp({fetchImpl=fetch, apiKey=()=>process.env.NASA_API_KEY,
   } catch {return res.status(502).json({error:`${source} is unavailable or returned an unexpected response. Please try again later.`});}
  }
  app.get('/api/horizons',(req,res)=>{
-  const body=HORIZONS_BODIES[req.query.body],date=req.query.date;
+  const bodyId=typeof req.query.body==='string'?req.query.body:'',body=Object.hasOwn(HORIZONS_BODIES,bodyId)?HORIZONS_BODIES[bodyId]:null,date=req.query.date;
   if(!body||typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date))return res.status(400).json({error:'Choose a supported planet and a YYYY-MM-DD date.'});
   const instant=new Date(date+'T12:00:00Z');
   if(!Number.isFinite(instant.getTime())||instant.toISOString().slice(0,10)!==date||instant.getTime()<MIN||instant.getTime()>MAX)return res.status(400).json({error:'Choose a valid date from 1800 through 2050.'});
@@ -83,7 +83,7 @@ export function createApp({fetchImpl=fetch, apiKey=()=>process.env.NASA_API_KEY,
  app.get('/api/:dataset',(req,res)=>{
   const nowDate=now().toISOString().slice(0,10);
   const endpoints={apod:'planetary/apod',neo:`neo/rest/v1/feed?start_date=${nowDate}&end_date=${nowDate}`,donki:`DONKI/FLR?startDate=${nowDate}&endDate=${nowDate}`};
-  const endpoint=endpoints[req.params.dataset];if(!endpoint)return res.status(404).json({error:'Unknown dataset'});
+  const endpoint=Object.hasOwn(endpoints,req.params.dataset)?endpoints[req.params.dataset]:null;if(!endpoint)return res.status(404).json({error:'Unknown dataset'});
   const key=apiKey();if(!key)return res.status(503).json({error:'NASA_API_KEY is not configured on the server.'});
   const url=new URL('https://api.nasa.gov/'+endpoint);url.searchParams.set('api_key',key);
   return load(res,`nasa:${req.params.dataset}:${nowDate}`,url,{source:'NASA Open APIs'});

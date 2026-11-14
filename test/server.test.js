@@ -12,6 +12,9 @@ test('API endpoints validate input, cache responses, and handle missing key and 
  try {
   assert.equal((await fetch(base+'/api/apod')).status,503);
   assert.equal((await fetch(base+'/api/does-not-exist')).status,404);
+  assert.equal((await fetch(base+'/api/toString')).status,404);
+  assert.equal((await fetch(base+'/api/horizons?body=toString&date=2000-01-01')).status,400);
+  assert.equal((await fetch(base+'/api/horizons?body=__proto__&date=2000-01-01')).status,400);
   assert.equal((await fetch(base+'/api/horizons?body=earth&date=2200-01-01')).status,400);
   assert.equal((await fetch(base+'/api/horizons?body=earth&date=2025-02-31')).status,400);
   assert.equal((await fetch(base+'/api/sbdb?q=%3Cscript%3E')).status,400);

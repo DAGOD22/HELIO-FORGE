@@ -64,3 +64,12 @@ test('color magnitude coordinates and catalogue filtering preserve missing value
  for(const query of ['aldebaran','HIP 21421','HD 29139','Gl 171.1A','87Alp Tau','HYG 21368'])assert.equal(matchesStar(s,query),true,query);
  assert.equal(matchesStar(s,'aldebaran','M'),false);assert.equal(matchesStar(s,'aldebaran','K'),true);
 });
+
+test('nearest-neighbor guides use static HYG 3D separations and the loaded subset only',async()=>{
+ const {closestCatalogStars}=await import('../src/galaxyModel.js');
+ const stars=JSON.parse(await readFile(new URL('../public/data/hyg-nearby-20pc.json',import.meta.url))),proxima=stars.find(s=>s.id===70666);
+ const close=closestCatalogStars(proxima,stars,5);assert.equal(close.length,5);assert.deepEqual(close.slice(0,2).map(a=>a.star.id),[71453,71456]);assert.ok(Math.abs(close[0].distanceLy-.1878927978)<1e-7);
+ assert.ok(close.every((v,i)=>v.star.id!==proxima.id&&Number.isFinite(v.distanceLy)&&(i===0||v.distanceLy>=close[i-1].distanceLy)));
+ assert.deepEqual(closestCatalogStars(proxima,[proxima],5),[]);assert.deepEqual(closestCatalogStars(null,stars),[]);assert.deepEqual(closestCatalogStars(proxima,stars,0),[]);
+ const identical={...proxima,id:999999};assert.equal(closestCatalogStars(proxima,[identical],1)[0].distanceLy,0);
+});

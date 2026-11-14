@@ -41,3 +41,11 @@ export function schematicGalaxy(count=38000,seed=81024){
  }
  return {positions,colors};
 }
+
+// Straight-line separation between the catalogue's static J2000 positions.
+// This is not a propagated trajectory, binary orbit, or uncertainty estimate.
+export function closestCatalogStars(reference,stars,limit=5){
+ if(!reference||!Array.isArray(stars)||!Number.isInteger(limit)||limit<=0)return [];
+ const origin=starPositionLy(reference);
+ return stars.filter(star=>star.id!==reference.id).map(star=>({star,distanceLy:Math.hypot(...starPositionLy(star).map((value,i)=>value-origin[i]))})).filter(item=>Number.isFinite(item.distanceLy)).sort((a,b)=>a.distanceLy-b.distanceLy||a.star.id-b.star.id).slice(0,limit);
+}

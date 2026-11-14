@@ -1,0 +1,22 @@
+{
+  "retrievedDate": "2026-11-13",
+  "source": "NASA Exoplanet Archive PS table, default_flag=1; separate reference/flag query keyed by planet name",
+  "rows": [
+    {"pl_name":"51 Peg b","hostname":"51 Peg","pl_refname":"Cont et al. 2026","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"55 Cnc e","hostname":"55 Cnc","pl_refname":"Bourrier et al. 2018","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"55 Cnc b","hostname":"55 Cnc","pl_refname":"Moutou et al. 2026","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"55 Cnc c","hostname":"55 Cnc","pl_refname":"Moutou et al. 2026","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"55 Cnc f","hostname":"55 Cnc","pl_refname":"Moutou et al. 2026","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"55 Cnc d","hostname":"55 Cnc","pl_refname":"Moutou et al. 2026","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"GJ 581 e","hostname":"GJ 581","pl_refname":"von Stauffenberg et al. 2024","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"GJ 581 b","hostname":"GJ 581","pl_refname":"von Stauffenberg et al. 2024","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"GJ 581 c","hostname":"GJ 581","pl_refname":"von Stauffenberg et al. 2024","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"GJ 876 d","hostname":"GJ 876","pl_refname":" Rivera et al. 2010 ","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"GJ 876 c","hostname":"GJ 876","pl_refname":" Rivera et al. 2010 ","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"GJ 876 b","hostname":"GJ 876","pl_refname":" Rivera et al. 2010 ","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"GJ 876 e","hostname":"GJ 876","pl_refname":" Rivera et al. 2010 ","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"Proxima Cen d","hostname":"Proxima Cen","pl_refname":"Suárez Mascareño et al. 2025","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"Proxima Cen b","hostname":"Proxima Cen","pl_refname":"Suárez Mascareño et al. 2025","pl_controv_flag":0,"soltype":"Published Confirmed"},
+    {"pl_name":"eps Eri b","hostname":"eps Eri","pl_refname":"Thompson et al. 2025","pl_controv_flag":0,"soltype":"Published Confirmed"}
+  ]
+}

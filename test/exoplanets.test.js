@@ -10,6 +10,8 @@ test('curated host mappings correspond to HYG HIP and sky positions',()=>{
  for(const h of EXOPLANET_HOSTS){const star=stars.find(s=>s.id===h.hygId),rows=snapshot.rows.filter(r=>r.hostname===h.host);assert.equal(star.hip,h.hip);assert.ok(rows.length);validateExoplanetRows(rows,h.id);for(const r of rows){assert.ok(Math.abs(star.ra*15-r.ra)<.1);assert.ok(Math.abs(star.dec-r.dec)<.1)}}
  assert.equal(snapshot.rows.filter(r=>r.hostname==='55 Cnc').length,5);
  assert.equal(snapshot.rows.find(r=>r.pl_name==='Proxima Cen b').pl_bmassprov,'Msini');
+ const proxima=snapshot.rows.find(r=>r.pl_name==='Proxima Cen b');assert.equal(proxima.pl_refname,'Suárez Mascareño et al. 2025');assert.equal(proxima.pl_controv_flag,0);assert.equal(proxima.soltype,'Published Confirmed');
+ assert.throws(()=>validateExoplanetRows([{...proxima,pl_controv_flag:2}],'proxima'));assert.throws(()=>validateExoplanetRows([{...proxima,pl_orbperlim:9}],'proxima'));
 });
 test('orbit diagram excludes limits, unknown sizes and formats missing values',()=>{
  assert.equal(hasDrawableOrbit({pl_orbsmax:1,pl_orbsmaxlim:0}),true);assert.equal(hasDrawableOrbit({pl_orbsmax:1,pl_orbsmaxlim:1}),false);assert.equal(hasDrawableOrbit({pl_orbsmax:null,pl_orbsmaxlim:0}),false);
