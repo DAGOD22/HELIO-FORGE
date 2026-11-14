@@ -1,2 +1,2 @@
 import { defineConfig } from 'vite';
-export default defineConfig({server:{host:'0.0.0.0',allowedHosts:true,proxy:{'/api':'http://127.0.0.1:3001'}},build:{outDir:'dist'}});
+export default defineConfig({server:{host:'0.0.0.0',allowedHosts:true,proxy:{'/api':'http://127.0.0.1:3001'}},build:{outDir:'dist',rollupOptions:{output:{manualChunks(id){if(id.includes('node_modules/three/'))return 'three';if(id.includes('node_modules/astronomy-engine/'))return 'astronomy';if(id.includes('node_modules/react-dom/')||id.includes('node_modules/react/'))return 'react';}}}}});

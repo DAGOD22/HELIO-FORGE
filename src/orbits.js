@@ -22,7 +22,13 @@ function elements(id,date) {
 }
 function positionFromAnomaly([a,e,i,,peri,node], meanAnomaly) {
  let M=((meanAnomaly+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI,E=M;
- for(let n=0;n<12;n++){const correction=(E-e*Math.sin(E)-M)/(1-e*Math.cos(E));E-=correction;if(Math.abs(correction)<1e-12)break;}
+ // A safeguarded Newton iteration converges even for near-parabolic comets.
+ let lo=-Math.PI,hi=Math.PI;
+ for(let n=0;n<60;n++){
+  const residual=E-e*Math.sin(E)-M;if(Math.abs(residual)<1e-14)break;
+  if(residual>0)hi=E;else lo=E;
+  const next=E-residual/(1-e*Math.cos(E));E=next>lo&&next<hi?next:(lo+hi)/2;
+ }
  const x=a*(Math.cos(E)-e),y=a*Math.sqrt(1-e*e)*Math.sin(E);
  const w=(peri-node)*RAD,O=node*RAD,inc=i*RAD;
  return [(Math.cos(O)*Math.cos(w)-Math.sin(O)*Math.sin(w)*Math.cos(inc))*x+(-Math.cos(O)*Math.sin(w)-Math.sin(O)*Math.cos(w)*Math.cos(inc))*y,
