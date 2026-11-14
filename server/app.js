@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'node:path';
+import {HOST_BY_ID,exoplanetQuery,validateExoplanetRows} from '../src/exoplanets.js';
 
 export const HORIZONS_BODIES={mercury:['1','10'],venus:['2','10'],earth:['3','10'],mars:['4','10'],jupiter:['5','10'],saturn:['6','10'],uranus:['7','10'],neptune:['8','10'],pluto:['9','10'],moon:['301','399'],io:['501','599'],europa:['502','599'],ganymede:['503','599'],callisto:['504','599'],phobos:['401','499'],deimos:['402','499'],enceladus:['602','699'],rhea:['605','699'],titan:['606','699'],iapetus:['608','699'],triton:['801','899'],charon:['901','999'],ceres:['1;','10'],haumea:['136108;','10'],makemake:['136472;','10'],eris:['136199;','10'],eros:['433;','10'],halley:['90000030;','10']};
 const MIN=Date.UTC(1800,0,1),MAX=Date.UTC(2051,0,1)-1;
@@ -72,6 +73,12 @@ export function createApp({fetchImpl=fetch, apiKey=()=>process.env.NASA_API_KEY,
   if(q.length<1||q.length>80||!/^[a-zA-Z0-9 /()+.\-]+$/.test(q))return res.status(400).json({error:'Enter a valid small-body name or designation (up to 80 characters).'});
   const url=new URL('https://ssd-api.jpl.nasa.gov/sbdb.api');url.searchParams.set('sstr',q);url.searchParams.set('phys-par','1');url.searchParams.set('discovery','1');url.searchParams.set('full-prec','1');
   return load(res,`sbdb:${q.toLowerCase()}`,url,{source:'NASA/JPL Small-Body Database'});
+ });
+ app.get('/api/exoplanets',(req,res)=>{
+  const host=typeof req.query.host==='string'?req.query.host:'';
+  if(!Object.hasOwn(HOST_BY_ID,host))return res.status(400).json({error:'Choose a supported planetary system.'});
+  const url=new URL('https://exoplanetarchive.ipac.caltech.edu/TAP/sync');url.searchParams.set('query',exoplanetQuery(host));url.searchParams.set('format','json');
+  return load(res,`exoplanets:${host}`,url,{source:'NASA Exoplanet Archive · Planetary Systems default solutions',parse:data=>validateExoplanetRows(data,host)});
  });
  app.get('/api/:dataset',(req,res)=>{
   const nowDate=now().toISOString().slice(0,10);
