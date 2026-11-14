@@ -1,0 +1,42 @@
+// HYG coordinates are J2000 equatorial; rotate to IAU Galactic coordinates.
+// x_g points to the Galactic centre, y_g to longitude 90°, z_g north.
+export const LIGHT_YEARS_PER_PARSEC=3.261563777;
+export const SUN_GALACTIC_RADIUS_LY=26000; // rounded, schematic placement
+const EQUATORIAL_TO_GALACTIC=[
+ [-0.0548755604,-0.8734370902,-0.4838350155],
+ [0.4941094279,-0.4448296300,0.7469822445],
+ [-0.8676661490,-0.1980763734,0.4559837762]
+];
+export function equatorialToGalactic(raHours,decDegrees,distanceLy){
+ const ra=raHours*Math.PI/12, dec=decDegrees*Math.PI/180;
+ const v=[Math.cos(dec)*Math.cos(ra),Math.cos(dec)*Math.sin(ra),Math.sin(dec)];
+ return EQUATORIAL_TO_GALACTIC.map(row=>distanceLy*row.reduce((sum,n,i)=>sum+n*v[i],0));
+}
+export function starPositionLy(star){
+ const [x,y,z]=equatorialToGalactic(star.ra,star.dec,star.dist*LIGHT_YEARS_PER_PARSEC);
+ // Sun at +X; galactic north is +Y in Three.js.
+ return [SUN_GALACTIC_RADIUS_LY-x,z,y];
+}
+// Procedural illustration only; particles are not a stellar catalogue or a fitted map.
+export function schematicGalaxy(count=38000,seed=81024){
+ const positions=new Float32Array(count*3),colors=new Float32Array(count*3);
+ let s=seed;const random=()=>((s=s*16807%2147483647)/2147483647);
+ const normal=()=>Math.sqrt(-2*Math.log(Math.max(random(),1e-12)))*Math.cos(2*Math.PI*random());
+ for(let i=0;i<count;i++){
+  let x,y,z,r;const kind=random();
+  if(kind<.22){ // broad, warm central bar / bulge
+   x=normal()*5400;z=normal()*2100;y=normal()*1200;r=Math.hypot(x,z);
+  }else{
+   r=3500+Math.pow(random(),.75)*45000;
+   if(kind<.79){
+    const arm=Math.floor(random()*4),angle=arm*Math.PI/2+1.4*Math.log(r/5500)+normal()*.16;
+    x=r*Math.cos(angle)+normal()*900;z=r*Math.sin(angle)+normal()*900;
+   }else{const angle=random()*Math.PI*2;x=r*Math.cos(angle);z=r*Math.sin(angle);}
+   y=normal()*(200+500*Math.exp(-r/9000));
+  }
+  const j=3*i;positions[j]=x;positions[j+1]=y;positions[j+2]=z;
+  const cool=kind>.25&&random()<.57,bright=.55+random()*.45;
+  colors[j]=(cool?.61:1)*bright;colors[j+1]=(cool?.78:.76)*bright;colors[j+2]=(cool?1:.53)*bright;
+ }
+ return {positions,colors};
+}

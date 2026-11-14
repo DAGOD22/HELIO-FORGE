@@ -15,3 +15,4 @@
 /* Keep all time controls reachable on narrow screens by swiping the timeline. */
 @media(max-width:750px){.timeline{overflow-x:auto;overscroll-behavior-x:contain}.time-label,.time-controls,.speed,.date-control{flex:none}.date-control{display:block;padding-left:10px}.date-control input{font-size:9px}}
 @media(max-width:750px){.center-caption{width:calc(100% - 28px);white-space:normal}.center-caption p{line-height:1.6}.render-disclosure{line-height:1.45}}
+.topbar nav .galaxy-nav{color:#a9d9eb;border-left:1px solid #2b4350;padding-left:22px}.galaxy-nav span{font-size:11px;margin-left:2px}@media(max-width:1100px){.topbar nav .galaxy-nav{padding-left:12px}}@media(max-width:750px){.topbar nav .galaxy-nav{display:block;border-left:0;padding-left:0;color:#a9d9eb}}
