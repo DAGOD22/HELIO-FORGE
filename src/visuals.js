@@ -5,6 +5,13 @@ export function makeArtisticSky(loader, textures){
  const sky=loader.load('/graphics/artistic-deep-space.jpg');sky.colorSpace=THREE.SRGBColorSpace;sky.mapping=THREE.EquirectangularReflectionMapping;textures.push(sky);return sky;
 }
 
+// NASA's catalogue-based celestial panorama. It is used as a visual backdrop,
+// not an aligned sky for the current date, position, or camera direction.
+export function makeCatalogSky(loader,textures,maxTextureSize){
+ const sky=loader.load('/graphics/nasa-deep-star-map-'+(maxTextureSize>=4096?'4k':'2k')+'.jpg');
+ sky.colorSpace=THREE.SRGBColorSpace;sky.mapping=THREE.EquirectangularReflectionMapping;textures.push(sky);return sky;
+}
+
 // Swap only the focused body's optional 4K map into memory on high presets.
 // A generation counter prevents stale downloads from replacing the current focus.
 export function createDetailTextureController(renderer,targets,loader=new THREE.TextureLoader()){let generation=0,current=null,key='',disposed=false;

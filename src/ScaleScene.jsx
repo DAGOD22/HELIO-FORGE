@@ -7,7 +7,7 @@ import {LIVE_MOONS,interpolateTrack} from './liveMoons';
 import {MINOR_BODIES} from './minorBodies';
 import {AU_KM,radiusAU} from './scaleModel';
 import {heliocentricPosition,orbitalPath,smallBodyPath,smallBodyHeliocentricPosition,parseSmallBodyOrbit,eclipticToScene} from './orbits';
-import {makeArtisticSky,makeRingMaterial,createDetailTextureController} from './visuals';
+import {makeArtisticSky,makeCatalogSky,makeRingMaterial,createDetailTextureController} from './visuals';
 
 const EPOCH=Date.UTC(2000,0,1,12),ROT={mercury:1407.6,venus:-5832.5,earth:23.9345,mars:24.6229,jupiter:9.925,saturn:10.656,uranus:-17.24,neptune:16.11,pluto:-153.2928,ceres:9.07417};
 const mapVector=v=>new THREE.Vector3(...eclipticToScene(v));
@@ -23,12 +23,12 @@ export default function ScaleScene({selected,onSelect,date,settings,overview,sma
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,logarithmicDepthBuffer:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;el.appendChild(renderer.domElement);
   const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.enablePan=true;controls.minDistance=1e-10;controls.maxDistance=400;
   scene.add(new THREE.AmbientLight(0xabb9c7,.35));root.add(new THREE.PointLight(0xfff6e7,1.6,0,0));
-  const loader=new THREE.TextureLoader(),textures=[],objects={},positions={},lines=[],meshes=[],radiusById={},detailTargets={},geometry=new THREE.SphereGeometry(1,64,40);const skyMap=makeArtisticSky(loader,textures),darkSky=new THREE.Color('#030812');scene.background=skyMap;
+  const loader=new THREE.TextureLoader(),textures=[],objects={},positions={},lines=[],meshes=[],radiusById={},detailTargets={},geometry=new THREE.SphereGeometry(1,64,40);const skyMap=makeArtisticSky(loader,textures),catalogSky=makeCatalogSky(loader,textures,renderer.capabilities.maxTextureSize),darkSky=new THREE.Color('#030812');scene.background=catalogSky;scene.backgroundIntensity=.48;
   function texture(file){const t=loader.load('/textures/'+file);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());textures.push(t);return t;}
   function addObject(id,parent=root){
    const data=allObjects.find(o=>o.id===id),r=radiusAU(id),group=new THREE.Group();parent.add(group);objects[id]=group;radiusById[id]=r;
    let material;if(id==='sun')material=new THREE.MeshBasicMaterial({map:texture(data.texture),color:0xffefd2,toneMapped:false});else material=new THREE.MeshLambertMaterial({color:data.texture?0xffffff:data.color,map:data.texture?texture(id==='earth'?'earth_day_4096.jpg':data.texture):null});
-   if(['jupiter','saturn','mars'].includes(id))detailTargets[id]={material,base:material.map,file:id+'_4k.jpg'};
+   if(['jupiter','saturn','mars','moon'].includes(id))detailTargets[id]={material,base:material.map,file:id==='moon'?'moon_lroc_4k.jpg':id+'_4k.jpg'};
    const mesh=new THREE.Mesh(geometry,material);mesh.scale.setScalar(r);mesh.userData.id=id;group.add(mesh);meshes.push(mesh);group.userData.mesh=mesh;
    const tex=labelTexture(data.name);textures.push(tex);const label=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));group.add(label);group.userData.label=label;
    return group;
@@ -59,7 +59,7 @@ export default function ScaleScene({selected,onSelect,date,settings,overview,sma
   function animate(){
    frame=requestAnimationFrame(animate);const now=performance.now(),dt=(now-lastFrame)/1000;lastFrame=now;const s=state.current;if(!s.date)return;
    if(lastQuality!==s.settings.quality){lastQuality=s.settings.quality;const caps={LOW:.75,MEDIUM:1,HIGH:1.5,ULTRA:2,EXTREME:2.5};renderer.setPixelRatio(Math.min(devicePixelRatio,caps[lastQuality]||1.5));const fraction={LOW:.3,MEDIUM:.6,HIGH:1,ULTRA:1,EXTREME:1}[lastQuality]||1;starField.geometry.setDrawRange(0,Math.floor(4000*fraction));belts.forEach(b=>b.geometry.setDrawRange(0,Math.floor(b.geometry.attributes.position.count*fraction)));resize();}
-   scene.background=s.settings.artisticSky?skyMap:darkSky;detailController.update(s.selected,s.settings.quality);
+   scene.background=s.settings.sky==='catalogue'?catalogSky:s.settings.sky==='artistic'?skyMap:darkSky;starField.visible=s.settings.sky==='artistic';detailController.update(s.selected,s.settings.quality);
    const days=(s.date.getTime()-EPOCH)/86400000;
    positions.sun=new THREE.Vector3();
    for(const p of planets){const pos=mapVector(heliocentricPosition(p,s.date));positions[p.id]=pos;objects[p.id].position.copy(pos);objects[p.id].userData.mesh.rotation.y=(days*24/ROT[p.id]*Math.PI*2)%(2*Math.PI);}
@@ -87,7 +87,7 @@ export default function ScaleScene({selected,onSelect,date,settings,overview,sma
    if(fly){fly.elapsed+=dt;const k=Math.min(1,fly.elapsed/2),ease=k*k*(3-2*k),dir=fly.startDir.clone().lerp(fly.endDir,ease);if(dir.lengthSq()<1e-8)dir.copy(fly.endDir);dir.normalize();controls.target.copy(fly.startTarget).multiplyScalar(1-ease);const distance=Math.exp(Math.log(fly.startDist)*(1-ease)+Math.log(fly.endDistance)*ease);camera.position.copy(controls.target).addScaledVector(dir,distance);if(k===1)fly=null;}
    const focusRadius=radiusById[focusId]||1e-6;controls.minDistance=Math.max(1e-11,focusRadius*1.08);camera.near=Math.max(1e-12,Math.min(focusRadius*.01,camera.position.distanceTo(controls.target)*.001));camera.updateProjectionMatrix();
    const cameraAbsolute=camera.position.clone().add(focus);
-   for(const [id,body] of Object.entries(objects)){const label=body.userData.label;if(!label?.isSprite)continue;const absolute=positions[id];label.visible=!!(s.settings.labels&&absolute&&id!==focusId&&body.visible!==false);if(label.visible){const dist=Math.max(cameraAbsolute.distanceTo(absolute),radiusById[id]||1e-8);label.scale.set(dist*.1,dist*.025,1);label.position.set(dist*.025,(radiusById[id]||0)+dist*.02,0);}}
+   for(const [id,body] of Object.entries(objects)){const label=body.userData.label;if(!label?.isSprite)continue;const absolute=positions[id];label.visible=!!(!s.cinematic&&s.settings.labels&&absolute&&id!==focusId&&body.visible!==false);if(label.visible){const dist=Math.max(cameraAbsolute.distanceTo(absolute),radiusById[id]||1e-8);label.scale.set(dist*.1,dist*.025,1);label.position.set(dist*.025,(radiusById[id]||0)+dist*.02,0);}}
    controls.update();renderer.render(scene,camera);
   }
   animate();
