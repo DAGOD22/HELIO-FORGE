@@ -44,13 +44,6 @@ export function orbitalPosition(p,date){return renderPosition(heliocentricPositi
 export function orbitalPath(p,date,segments=256){
  const values=elements(p.id,date);return Array.from({length:segments+1},(_,j)=>renderPosition(positionFromAnomaly(values,j/segments*Math.PI*2)));
 }
-// Illustrative lunar phase, approximate sidereal period and inclination; arbitrary epoch phase.
-export function illustrativeMoonPosition(date) {
- const days=(date.getTime()-EPOCH)/DAY;
- const a=days/27.321661*Math.PI*2, inclination=5.145*RAD, distance=2.2;
- return [Math.cos(a)*distance,Math.sin(a)*distance*Math.sin(inclination),Math.sin(a)*distance*Math.cos(inclination)];
-}
-
 // JPL SBDB osculating elliptical elements propagated as an unperturbed two-body orbit.
 // The epoch and element names are those supplied by SBDB; accuracy degrades away from epoch.
 export function parseSmallBodyOrbit(data) {

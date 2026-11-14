@@ -1,8 +1,9 @@
 import React, {useEffect, useRef} from 'react';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
-import {planets} from './data';
-import {orbitalPosition, orbitalPath, illustrativeMoonPosition, parseSmallBodyOrbit, smallBodyHeliocentricPosition, smallBodyPath, renderPosition} from './orbits';
+import {planets,allObjects} from './data';
+import {SATELLITES, satelliteDisplayPosition, satellitePath, plutoEclipticPosition, allSatelliteEclipticPositions} from './satellites';
+import {orbitalPosition, orbitalPath, parseSmallBodyOrbit, smallBodyHeliocentricPosition, smallBodyPath, renderPosition} from './orbits';
 
 const ROTATION_HOURS = {mercury:1407.6, venus:-5832.5, earth:23.9345, mars:24.6229, jupiter:9.925, saturn:10.656, uranus:-17.24, neptune:16.11};
 const EPOCH = Date.UTC(2000,0,1,12);
@@ -106,8 +107,7 @@ export default function Scene({selected,onSelect,date,settings,overview,smallBod
     const cloudMat=new THREE.MeshLambertMaterial({map:texture('earth_clouds_1024.png'),transparent:true,opacity:.75,depthWrite:false});
     const clouds=new THREE.Mesh(sphere,cloudMat);clouds.scale.setScalar(p.size*1.012);tilted.add(clouds);group.userData.clouds=clouds;
     const atmos=new THREE.Mesh(sphere,new THREE.ShaderMaterial({vertexShader:atmosphereVertex,fragmentShader:atmosphereFragment,transparent:true,side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false}));atmos.scale.setScalar(p.size*1.045);group.add(atmos);group.userData.atmos=atmos;
-    const moon=new THREE.Mesh(sphere,new THREE.ShaderMaterial({uniforms:{dayMap:{value:texture('moon.jpg')},nightMap:{value:nightMap},specularMap:{value:specularMap},earth:{value:0}},vertexShader:vertex,fragmentShader:planetFragment}));moon.scale.setScalar(.223);moon.userData.id='moon';group.add(moon);objects.moon=moon;
-    const moonPoints=[];for(let i=0;i<=120;i++){const a=i/120*Math.PI*2;moonPoints.push(new THREE.Vector3(Math.cos(a)*2.2,Math.sin(a)*2.2*Math.sin(5.145*Math.PI/180),Math.sin(a)*2.2*Math.cos(5.145*Math.PI/180)))}const moonOrbit=new THREE.Line(new THREE.BufferGeometry().setFromPoints(moonPoints),new THREE.LineBasicMaterial({color:0x7b9dac,transparent:true,opacity:.28}));group.add(moonOrbit);group.userData.moonOrbit=moonOrbit;
+
    }
    if(p.id==='saturn'){
     // Procedural rings are an illustrative rendering, not a measured optical-depth profile.
@@ -126,6 +126,22 @@ export default function Scene({selected,onSelect,date,settings,overview,smallBod
    const points=orbitalPath(p,state.current.date||new Date()).map(point=>new THREE.Vector3(...point));
    const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:0x6f91a4,transparent:true,opacity:.24}));scene.add(line);group.userData.orbit=line;
   });
+  // Pluto's system barycenter is computed by Astronomy Engine; surface orientation is approximate.
+  const pluto=new THREE.Group();scene.add(pluto);objects.pluto=pluto;
+  const plutoSurface=new THREE.Mesh(sphere,new THREE.ShaderMaterial({uniforms:{dayMap:{value:texture('pluto.jpg')},nightMap:{value:nightMap},specularMap:{value:specularMap},earth:{value:0}},vertexShader:vertex,fragmentShader:planetFragment}));
+  plutoSurface.scale.setScalar(.32);plutoSurface.rotation.z=119.51*Math.PI/180;plutoSurface.userData.id='pluto';pluto.add(plutoSurface);pluto.userData.mesh=plutoSurface;
+  const plutoMap=makeLabel('Pluto');textures.push(plutoMap);const plutoLabel=new THREE.Sprite(new THREE.SpriteMaterial({map:plutoMap,transparent:true,depthWrite:false}));plutoLabel.scale.set(3,.75,1);plutoLabel.position.set(1,.9,0);pluto.add(plutoLabel);pluto.userData.label=plutoLabel;
+  const plutoPath=[];for(let j=0;j<=80;j++){const t=new Date((state.current.date||new Date()).getTime()+90560*86400000*j/80);plutoPath.push(new THREE.Vector3(...renderPosition(plutoEclipticPosition(t))))}
+  const plutoLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(plutoPath),new THREE.LineBasicMaterial({color:0x7894a4,transparent:true,opacity:.28}));scene.add(plutoLine);
+  // Satellite orbits use physical parent-relative vectors from Astronomy Engine;
+  // display distances and radii are independently enlarged for visibility.
+  for(const info of Object.values(SATELLITES)){
+   const parent=objects[info.parent],body=allObjects.find(o=>o.id===info.id);
+   const material=new THREE.ShaderMaterial({uniforms:{dayMap:{value:texture(body.texture)},nightMap:{value:nightMap},specularMap:{value:specularMap},earth:{value:0}},vertexShader:vertex,fragmentShader:planetFragment});
+   const moon=new THREE.Mesh(sphere,material);moon.scale.setScalar(info.size);moon.userData.id=info.id;parent.add(moon);objects[info.id]=moon;
+   const map=makeLabel(info.name);textures.push(map);const label=new THREE.Sprite(new THREE.SpriteMaterial({map,transparent:true,depthWrite:false}));label.scale.set(1.5,.375,1);label.position.set(.45,info.size+.18,0);moon.add(label);label.scale.multiplyScalar(1/info.size);label.position.multiplyScalar(1/info.size);moon.userData.label=label;
+   const line=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x93b2c2,transparent:true,opacity:.35}));parent.add(line);moon.userData.orbit=line;
+  }
   // Procedural points are illustrative, not a star catalogue.
   let seed=1827;const random=()=>((seed=(seed*16807)%2147483647)/2147483647);const positions=[],colors=[];
   for(let j=0;j<4000;j++){const r=300+random()*300,theta=random()*Math.PI*2,phi=Math.acos(2*random()-1);positions.push(r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));const brightness=.3+random()*.7;colors.push(brightness*(.82+random()*.18),brightness*(.89+random()*.11),brightness)}
@@ -139,10 +155,10 @@ export default function Scene({selected,onSelect,date,settings,overview,smallBod
   const belts=[makeBelt(1400,2.2,3.2,0xb7a996),makeBelt(1900,30,50,0x869ba7)];
   const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let down;
   function pointerDown(e){down=[e.clientX,e.clientY]}
-  function click(e){if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const r=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);const hit=ray.intersectObjects([sun,objects.moon,...planets.map(p=>objects[p.id].userData.mesh),...(objects['small-body']?[objects['small-body'].userData.mesh]:[])].filter(o=>o.visible&&o.parent?.visible!==false));if(hit.length)onSelect(hit[0].object.userData.id)}
+  function click(e){if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const r=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);const hit=ray.intersectObjects([sun,plutoSurface,...Object.keys(SATELLITES).map(id=>objects[id]),...planets.map(p=>objects[p.id].userData.mesh),...(objects['small-body']?[objects['small-body'].userData.mesh]:[])].filter(o=>o.visible&&o.parent?.visible!==false));if(hit.length)onSelect(hit[0].object.userData.id)}
   renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',click);
   const resize=()=>{const w=el.clientWidth,h=el.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)};window.addEventListener('resize',resize);resize();
-  let frame,lastSelected='',lastOverview=-1,lastQuality='',lastOrbitYear=null,previousSmallBody=null,smallBodyOrbit=null,smallBodyLine=null,transition=0,offset=new THREE.Vector3(),target=new THREE.Vector3(),desired=new THREE.Vector3(),worldPos=new THREE.Vector3(),lastWorld=new THREE.Vector3(),lastFrame=performance.now();
+  let frame,lastSelected='',lastOverview=-1,lastQuality='',lastOrbitYear=null,lastSatUpdate=null,lastPlutoUpdate=null,lastGuideKey='',previousSmallBody=null,smallBodyOrbit=null,smallBodyLine=null,transition=0,offset=new THREE.Vector3(),target=new THREE.Vector3(),desired=new THREE.Vector3(),worldPos=new THREE.Vector3(),lastWorld=new THREE.Vector3(),lastFrame=performance.now();
   function animate(){
    frame=requestAnimationFrame(animate);const now=performance.now(),dt=Math.min(.25,(now-lastFrame)/1000);lastFrame=now;const s=state.current;if(!s.date)return;
    if(s.settings.quality!==lastQuality){lastQuality=s.settings.quality;const caps={LOW:.75,MEDIUM:1,HIGH:1.5,ULTRA:2,EXTREME:2.5};renderer.setPixelRatio(Math.min(devicePixelRatio,caps[lastQuality]||1.5));resize()}
@@ -165,14 +181,24 @@ export default function Scene({selected,onSelect,date,settings,overview,smallBod
    if(s.date.getUTCFullYear()!==lastOrbitYear){lastOrbitYear=s.date.getUTCFullYear();planets.forEach(p=>{const line=objects[p.id].userData.orbit;line.geometry.dispose();line.geometry=new THREE.BufferGeometry().setFromPoints(orbitalPath(p,s.date).map(point=>new THREE.Vector3(...point)))})}
    // Isolation prevents exaggerated, compressed bodies from visually eclipsing the focused world.
    sun.visible=s.selected==='overview'||s.selected==='sun';glow.visible=sun.visible;belts.forEach(b=>{b.visible=s.selected==='overview'&&s.settings.belts});
-   planets.forEach(p=>{const obj=objects[p.id];obj.visible=s.selected==='overview'||s.selected===p.id||(s.selected==='moon'&&p.id==='earth')||(!objects[s.selected]&&p.id==='earth');obj.position.set(...orbitalPosition(p,s.date));obj.userData.mesh.rotation.y=(days*24/ROTATION_HOURS[p.id]*Math.PI*2)%(Math.PI*2);obj.userData.label.visible=s.settings.labels&&s.selected==='overview';obj.userData.orbit.visible=s.settings.orbits&&(s.selected==='overview'||s.selected===p.id);obj.userData.orbit.material.opacity=s.selected===p.id?.5:.18;if(obj.userData.atmos)obj.userData.atmos.visible=s.settings.atmosphere;if(obj.userData.clouds){obj.userData.clouds.rotation.y=obj.userData.mesh.rotation.y+days*.018;obj.userData.clouds.visible=s.settings.atmosphere;obj.userData.moonOrbit.visible=s.settings.orbits&&(s.selected==='earth'||s.selected==='moon');}});
-   // The Moon's period and inclination are approximate; phase is illustrative, not an ephemeris.
-   const ma=days/27.321661*Math.PI*2;objects.moon.position.set(...illustrativeMoonPosition(s.date));objects.moon.rotation.y=-ma;sun.rotation.y=(days/25.38*Math.PI*2)%(Math.PI*2);
+   planets.forEach(p=>{const obj=objects[p.id];obj.visible=s.selected==='overview'||s.selected===p.id||(SATELLITES[s.selected]?.parent===p.id)||(!objects[s.selected]&&p.id==='earth');obj.position.set(...orbitalPosition(p,s.date));obj.userData.mesh.rotation.y=(days*24/ROTATION_HOURS[p.id]*Math.PI*2)%(Math.PI*2);obj.userData.label.visible=s.settings.labels&&s.selected==='overview';obj.userData.orbit.visible=s.settings.orbits&&(s.selected==='overview'||s.selected===p.id);obj.userData.orbit.material.opacity=s.selected===p.id?.5:.18;if(obj.userData.atmos)obj.userData.atmos.visible=s.settings.atmosphere;if(obj.userData.clouds){obj.userData.clouds.rotation.y=obj.userData.mesh.rotation.y+days*.018;obj.userData.clouds.visible=s.settings.atmosphere;}});
+   const second=Math.floor(s.date.getTime()/1000);if(second!==lastPlutoUpdate){lastPlutoUpdate=second;pluto.position.set(...renderPosition(plutoEclipticPosition(s.date)))}pluto.visible=s.selected==='overview'||s.selected==='pluto';plutoSurface.rotation.y=days*24/-153.2928*Math.PI*2;plutoLabel.visible=pluto.visible&&s.settings.labels&&s.selected==='overview';plutoLine.visible=s.settings.orbits&&(s.selected==='overview'||s.selected==='pluto');
+   const satelliteParent=SATELLITES[s.selected]?.parent||s.selected;
+   const satelliteTime=Math.floor(s.date.getTime()/1000);
+   if(satelliteTime!==lastSatUpdate){lastSatUpdate=satelliteTime;const physical=allSatelliteEclipticPositions(s.date);for(const info of Object.values(SATELLITES)){
+    const moon=objects[info.id], position=satelliteDisplayPosition(info.id,s.date,physical[info.id]);moon.position.set(...position);
+    // Tidal locking is approximate; surface prime meridians/libration are not modeled.
+    moon.rotation.y=Math.atan2(-position[0],-position[2]);
+   }}
+   const guideKey=satelliteParent+':'+s.date.getUTCFullYear()+':'+s.date.getUTCMonth();
+   if(guideKey!==lastGuideKey){lastGuideKey=guideKey;for(const info of Object.values(SATELLITES))if(info.parent===satelliteParent){const line=objects[info.id].userData.orbit;line.geometry.dispose();line.geometry=new THREE.BufferGeometry().setFromPoints(satellitePath(info.id,s.date,64).map(v=>new THREE.Vector3(...v)));}}
+   for(const info of Object.values(SATELLITES)){const moon=objects[info.id];moon.visible=info.parent===satelliteParent;moon.userData.orbit.visible=moon.visible&&s.settings.orbits;moon.userData.label.visible=moon.visible&&s.settings.labels&&!SATELLITES[s.selected];}
+   sun.rotation.y=(days/25.38*Math.PI*2)%(Math.PI*2);
    const focused=objects[s.selected]||objects.earth;
    if(s.selected!==lastSelected||s.overview!==lastOverview){
     lastSelected=s.selected;lastOverview=s.overview;transition=1;
     if(s.selected==='overview'){offset.set(0,47,68)}else{
-     focused.getWorldPosition(worldPos);const size=s.selected==='sun'?2.5:s.selected==='moon'?.223:s.selected==='small-body'?.35:(planets.find(p=>p.id===s.selected)?.size||.82);
+     focused.getWorldPosition(worldPos);const size=s.selected==='sun'?2.5:SATELLITES[s.selected]?.size|| (s.selected==='small-body'?.35:s.selected==='pluto'?.32:(planets.find(p=>p.id===s.selected)?.size||.82));
      const towardSun=new THREE.Vector3(-worldPos.x,0,-worldPos.z).normalize();if(towardSun.lengthSq()<.1)towardSun.set(1,0,0);
      const tangent=new THREE.Vector3(-towardSun.z,0,towardSun.x);
      offset.copy(towardSun).multiplyScalar(size*5.6).addScaledVector(tangent,size*2.8);offset.y=size*1.35;

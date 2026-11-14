@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'node:path';
 
-export const HORIZONS_BODIES={mercury:'1',venus:'2',earth:'3',mars:'4',jupiter:'5',saturn:'6',uranus:'7',neptune:'8'};
+export const HORIZONS_BODIES={mercury:['1','10'],venus:['2','10'],earth:['3','10'],mars:['4','10'],jupiter:['5','10'],saturn:['6','10'],uranus:['7','10'],neptune:['8','10'],pluto:['9','10'],moon:['301','399'],io:['501','599'],europa:['502','599'],ganymede:['503','599'],callisto:['504','599']};
 const MIN=Date.UTC(1800,0,1),MAX=Date.UTC(2051,0,1)-1;
 
 export function parseHorizonsVector(result) {
@@ -31,15 +31,15 @@ export function createApp({fetchImpl=fetch, apiKey=()=>process.env.NASA_API_KEY,
   } catch {return res.status(502).json({error:`${source} is unavailable or returned an unexpected response. Please try again later.`});}
  }
  app.get('/api/horizons',(req,res)=>{
-  const id=HORIZONS_BODIES[req.query.body],date=req.query.date;
-  if(!id||typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date))return res.status(400).json({error:'Choose a supported planet and a YYYY-MM-DD date.'});
+  const body=HORIZONS_BODIES[req.query.body],date=req.query.date;
+  if(!body||typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date))return res.status(400).json({error:'Choose a supported planet and a YYYY-MM-DD date.'});
   const instant=new Date(date+'T12:00:00Z');
   if(!Number.isFinite(instant.getTime())||instant.toISOString().slice(0,10)!==date||instant.getTime()<MIN||instant.getTime()>MAX)return res.status(400).json({error:'Choose a valid date from 1800 through 2050.'});
   const jd=instant.getTime()/86400000+2440587.5;
   const url=new URL('https://ssd.jpl.nasa.gov/api/horizons.api');
-  const params={format:'json',COMMAND:id,MAKE_EPHEM:'YES',OBJ_DATA:'NO',EPHEM_TYPE:'VECTORS',CENTER:'500@10',TLIST:String(jd),TLIST_TYPE:'JD',TIME_TYPE:'UT',REF_PLANE:'ECLIPTIC',OUT_UNITS:'AU-D',VEC_TABLE:'1',CSV_FORMAT:'YES'};
+  const [id,center]=body;const params={format:'json',COMMAND:id,MAKE_EPHEM:'YES',OBJ_DATA:'NO',EPHEM_TYPE:'VECTORS',CENTER:'500@'+center,TLIST:String(jd),TLIST_TYPE:'JD',TIME_TYPE:'UT',REF_PLANE:'ECLIPTIC',OUT_UNITS:'AU-D',VEC_TABLE:'1',CSV_FORMAT:'YES'};
   for(const [k,v] of Object.entries(params))url.searchParams.set(k,k==='format'?v:`'${v}'`);
-  return load(res,`horizons:${id}:${date}`,url,{source:'NASA/JPL Horizons',parse:data=>({positionAU:parseHorizonsVector(data.result),date:instant.toISOString(),frame:'Heliocentric J2000 ecliptic; geometric, UT; planetary-system barycenter',signature:data.signature})});
+  return load(res,`horizons:${id}:${date}`,url,{source:'NASA/JPL Horizons',parse:data=>({positionAU:parseHorizonsVector(data.result),date:instant.toISOString(),frame:center==='10'?'Sun-centered planetary-system barycenter, J2000 ecliptic; geometric, UT':`${center==='399'?'Earth':'Jupiter'}-centered satellite, J2000 ecliptic; geometric, UT`,signature:data.signature})});
  });
  app.get('/api/sbdb',(req,res)=>{
   const q=typeof req.query.q==='string'?req.query.q.trim():'';

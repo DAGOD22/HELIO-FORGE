@@ -1,20 +1,21 @@
 import React, {useState} from 'react';
 import {ArrowUpRight} from 'lucide-react';
 import {heliocentricPosition,parseSmallBodyOrbit} from './orbits';
+import {SATELLITES,satelliteEclipticPosition,plutoEclipticPosition} from './satellites';
 
 export function HorizonsCheck({object,date}) {
  const [state,setState]=useState({});
- if(!object?.a)return null;
+ if(!object?.a&&!SATELLITES[object?.id]&&object?.id!=='pluto')return null;
  const check=async()=>{
   const day=date.toISOString().slice(0,10);setState({loading:true});
   try {
    const response=await fetch(`/api/horizons?body=${encodeURIComponent(object.id)}&date=${day}`);const json=await response.json();if(!response.ok)throw new Error(json.error);
-   const reference=json.data.positionAU,approx=heliocentricPosition(object,new Date(day+'T12:00:00Z'));
+   const reference=json.data.positionAU,approx=SATELLITES[object.id]?satelliteEclipticPosition(object.id,new Date(day+'T12:00:00Z')):object.id==='pluto'?plutoEclipticPosition(new Date(day+'T12:00:00Z')):heliocentricPosition(object,new Date(day+'T12:00:00Z'));
    const difference=Math.hypot(...approx.map((value,i)=>value-reference[i]));
    setState({day,difference,reference,approx,retrievedAt:json.retrievedAt});
   }catch(error){setState({error:error.message})}
  };
- return <div className="horizons-check"><div className="section-title"><span>EPHEMERIS CHECK</span><span className="verified">JPL HORIZONS</span></div><p>Compare the uncompressed model with a geometric Horizons vector at 12:00 UTC on the selected date.</p><button className="primary" onClick={check} disabled={state.loading}>{state.loading?'CHECKING...':'COMPARE WITH HORIZONS'} <ArrowUpRight size={13}/></button>{state.error&&<p className="error">{state.error}</p>}{state.reference&&<div className="horizons-result"><b>{(state.difference*149597870.7).toLocaleString(undefined,{maximumFractionDigits:0})} km vector difference</b><p>{state.day} 12:00 UTC · {object.name} system barycenter, Sun-centered J2000 ecliptic. UTC/TDB approximation contributes to the difference.</p><p>Model AU: {state.approx.map(v=>v.toFixed(6)).join(', ')}<br/>Horizons AU: {state.reference.map(v=>v.toFixed(6)).join(', ')}</p><small>Retrieved {new Date(state.retrievedAt).toUTCString()}</small></div>}</div>
+ return <div className="horizons-check"><div className="section-title"><span>EPHEMERIS CHECK</span><span className="verified">JPL HORIZONS</span></div><p>Compare the uncompressed model with a geometric Horizons vector at 12:00 UTC on the selected date.</p><button className="primary" onClick={check} disabled={state.loading}>{state.loading?'CHECKING...':'COMPARE WITH HORIZONS'} <ArrowUpRight size={13}/></button>{state.error&&<p className="error">{state.error}</p>}{state.reference&&<div className="horizons-result"><b>{(state.difference*149597870.7).toLocaleString(undefined,{maximumFractionDigits:0})} km vector difference</b><p>{state.day} 12:00 UTC · {SATELLITES[object.id]?(SATELLITES[object.id].parent==='earth'?'Earth-centered':'Jupiter-centered'):'Sun-centered planetary-system barycenter'}, J2000 ecliptic; geometric. Models have different accuracy and timing approximations.</p><p>Model AU: {state.approx.map(v=>v.toFixed(6)).join(', ')}<br/>Horizons AU: {state.reference.map(v=>v.toFixed(6)).join(', ')}</p><small>Retrieved {new Date(state.retrievedAt).toUTCString()}</small></div>}</div>
 }
 
 export function SmallBodyLookup({onExplore}) {

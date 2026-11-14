@@ -16,7 +16,8 @@ test('API endpoints validate input, cache responses, and handle missing key and 
   assert.equal((await fetch(base+'/api/sbdb?q=%3Cscript%3E')).status,400);
   const url=base+'/api/horizons?body=earth&date=2000-01-01';const first=await (await fetch(url)).json();assert.deepEqual(first.data.positionAU,[-.1771587841839055,.9672193524609504,-.000001139275508446145]);await fetch(url);assert.equal(calls,1);
   assert.match(requested[0],/ssd\.jpl\.nasa\.gov/);assert.match(requested[0],/COMMAND=%273%27/);
-  assert.equal((await (await fetch(base+'/api/sbdb?q=Eros')).json()).data.object.fullname,'433 Eros');assert.equal(calls,2);
+  assert.equal((await fetch(base+'/api/horizons?body=moon&date=2000-01-01')).status,200);assert.match(requested[1],/COMMAND=%27301%27/);assert.match(requested[1],/CENTER=%27500%40399%27/);
+  assert.equal((await (await fetch(base+'/api/sbdb?q=Eros')).json()).data.object.fullname,'433 Eros');assert.equal(calls,3);
  } finally {server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
  const broken=createApp({fetchImpl:async()=>{throw Error('network')},apiKey:()=> 'test-key'}).listen(0,'127.0.0.1');await new Promise(resolve=>broken.once('listening',resolve));try{const r=await fetch(`http://127.0.0.1:${broken.address().port}/api/apod`);assert.equal(r.status,502);assert.doesNotMatch(JSON.stringify(await r.json()),/test-key/)}finally{broken.closeAllConnections();await new Promise(resolve=>broken.close(resolve))}
 });

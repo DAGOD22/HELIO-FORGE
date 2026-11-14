@@ -1,11 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {orbitalPosition, orbitalPath, heliocentricPosition, illustrativeMoonPosition} from '../src/orbits.js';
+import {orbitalPosition, orbitalPath, heliocentricPosition} from '../src/orbits.js';
 import {planets} from '../src/data.js';
 const epoch=new Date('2000-01-01T12:00:00Z');
 test('all eight planet positions are finite',()=>{assert.equal(planets.length,8);for(const p of planets) assert.ok(orbitalPosition(p,epoch).every(Number.isFinite),p.name)});
 test('orbit guides are closed and eccentric',()=>{for(const p of planets){const path=orbitalPath(p,epoch);assert.ok(Math.hypot(...path[0].map((x,i)=>x-path.at(-1)[i]))<1e-8,p.name)}const radii=orbitalPath(planets[0],epoch).map(v=>Math.hypot(...v));assert.ok(Math.max(...radii)-Math.min(...radii)>.5)});
-test('illustrative Moon orbit keeps a constant radius and repeats',()=>{const first=illustrativeMoonPosition(epoch);const quarter=illustrativeMoonPosition(new Date(epoch.getTime()+27.321661*86400000/4));const repeat=illustrativeMoonPosition(new Date(epoch.getTime()+27.321661*86400000));assert.ok(Math.abs(Math.hypot(...quarter)-2.2)<1e-10);assert.ok(Math.hypot(...first.map((x,i)=>x-repeat[i]))<1e-7)});
 // Horizons DE441, geometric heliocentric J2000 ecliptic vectors, AU.
 // Retrieved 2026-11-13. Dates are JDTDB; UTC is used as a close approximation.
 const cases=[
