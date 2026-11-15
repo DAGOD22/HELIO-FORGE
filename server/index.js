@@ -1,4 +1,4 @@
 import 'dotenv/config';
 import {createApp} from './app.js';
 const port=Number(process.env.PORT)||3001;
-createApp().listen(port,'0.0.0.0',()=>console.log(`COSMOS server listening on ${port}`));
+createApp().listen(port,'0.0.0.0',()=>console.log(`HELIO-FORGE server listening on ${port}`));

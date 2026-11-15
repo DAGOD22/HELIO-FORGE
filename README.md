@@ -1,4 +1,4 @@
-# COSMOS — Mission Control
+# HELIO-FORGE — Mission Control
 
 An educational Earth-observing mission design game with an interactive Solar System and Milky Way explorer. The mission game uses illustrative parameters and is not a flight-design tool. The explorer remains incomplete and is not a precision universe simulator.
 

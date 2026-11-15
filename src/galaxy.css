@@ -53,3 +53,4 @@
 }
 .galaxy-app:not(.galaxy-cinematic) .galaxy-quick-enter{position:static;transform:none;display:inline-flex;margin:10px auto 0}
 @media(max-width:750px){.galaxy-app:not(.galaxy-cinematic) .galaxy-workspace-tools{top:auto;bottom:108px}}
+@media(max-width:750px){.galaxy-brand{gap:7px}.galaxy-brand b{font-size:11px;letter-spacing:.1em;white-space:nowrap}.galaxy-brand small{font-size:7px;letter-spacing:.08em}}

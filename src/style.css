@@ -135,3 +135,4 @@
 @media(max-width:750px){.explore-guide summary{padding:8px}.explore-guide-card{top:auto;bottom:calc(100% + 8px);left:auto;right:0;width:min(260px,calc(100vw - 24px))}}
 .app:not(.cinematic) .bottom{z-index:5}
 @media(max-width:750px){.mobile-time-options .speed select{max-width:none}}
+@media(max-width:750px){.brand{gap:7px}.brand b{font-size:11px;letter-spacing:.1em;white-space:nowrap}.brand small{font-size:7px;letter-spacing:.08em}}
