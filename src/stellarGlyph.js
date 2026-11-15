@@ -5,14 +5,14 @@ export function glyphAngle(id){
  return (hash>>>0)%360;
 }
 export const stellarFragment=`
- float radius=length(gl_PointCoord-vec2(.5))*2.0;
+ vec2 uv=(gl_PointCoord-vec2(.5))*2.0;float radius=length(uv);
  if(radius>1.0)discard;
- vec2 uv=(gl_PointCoord-vec2(.5))*2.0;
- float disc=1.0-smoothstep(.72,.76,radius);
- float rim=sqrt(max(0.0,1.0-radius*radius));
- float detail=sin(uv.x*17.0+seed)*sin(uv.y*19.0-seed*.7)*.11+sin((uv.x+uv.y)*31.0+seed)*.04;
- float surface=clamp(.58+.26*rim+detail,.24,1.0);
- float halo=(1.0-smoothstep(.74,1.0,radius))*.18;
- vec3 tint=mix(vColor*.58,vColor*1.18,surface);
- gl_FragColor=vec4(tint,fade*(disc*.88+halo*(1.0-disc))*(.65+.35*vBrightness));
+ float disc=1.0-smoothstep(.66,.72,radius);
+ float limb=sqrt(max(0.0,1.0-radius*radius));
+ float flow=sin(uv.x*19.0+sin(uv.y*13.0+seed)*1.7+seed)*sin(uv.y*22.0-seed);
+ float grain=sin(uv.x*43.0+uv.y*19.0+seed)*sin(uv.y*47.0-uv.x*11.0);
+ float surface=clamp(.53+.3*limb+.12*flow+.045*grain,.18,1.0);
+ float halo=exp(-max(0.0,radius-.65)*11.0)*.27;
+ vec3 tint=mix(vColor*.52,vColor*1.22,surface);
+ gl_FragColor=vec4(tint,fade*(disc*.91+halo*(1.0-disc))*(.68+.32*vBrightness));
 `;
