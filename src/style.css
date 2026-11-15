@@ -59,3 +59,63 @@
 @media(max-width:750px){.topbar nav button:nth-child(n){display:none}.topbar nav button:nth-child(1),.topbar nav button:nth-child(2){display:block}.topbar nav{gap:12px}.brand{flex:none}.top-right{flex:none}}
 .storage-notice{border-left:2px solid #dcb486;padding:8px 10px;margin:12px 0;color:#e4c6a6;background:#302820;font-size:11px;line-height:1.45}
 @media(max-width:380px){.scene-actions{grid-template-columns:repeat(2,36px);gap:4px}.scene-actions .camera-controls{display:grid;grid-template-columns:repeat(2,36px);gap:4px}.scene-actions button{width:36px;height:36px}}
+
+/* A canvas-first workspace. Catalogues and the planet strip are available on
+   demand rather than permanently reducing the simulator's usable area. */
+.app:not(.cinematic){height:100dvh;min-height:0}
+.app:not(.cinematic) .scene{top:76px;bottom:58px}
+.app:not(.cinematic).planets-open .scene{bottom:128px}
+.app:not(.cinematic) .center-ui{top:76px;bottom:58px;left:0;right:0}
+.app:not(.cinematic).planets-open .center-ui{bottom:128px}
+.app:not(.cinematic) .bottom{height:58px}
+.app:not(.cinematic).planets-open .bottom{height:128px}
+.app:not(.cinematic) .timeline{height:58px;gap:18px;padding:0 20px;overflow-x:auto;overscroll-behavior-x:contain}
+.app:not(.cinematic) .bottom-strip{height:70px}
+.app:not(.cinematic) .bottom-strip[hidden],.app:not(.cinematic) .left-panel[hidden],.app:not(.cinematic) .info-panel[hidden]{display:none}
+.app:not(.cinematic) .footnote{display:none}
+.app:not(.cinematic) .left-panel,.app:not(.cinematic) .info-panel{top:76px;bottom:58px;width:min(320px,calc(100vw - 24px));z-index:6;background:#081722f7;box-shadow:0 12px 36px #0008}
+.app:not(.cinematic).planets-open .left-panel,.app:not(.cinematic).planets-open .info-panel{bottom:128px}
+.app:not(.cinematic) .left-panel.mobile-open{display:block}
+.app:not(.cinematic) .info-panel{padding:24px;max-height:none;border:0;border-left:1px solid #304652}
+.app:not(.cinematic) .info-panel .panel-rule,.app:not(.cinematic) .info-panel .section-title,.app:not(.cinematic) .info-panel .details-link,.app:not(.cinematic) .info-panel .panel-note,.app:not(.cinematic) .info-panel .asset-credit,.app:not(.cinematic) .info-panel .horizons-check{display:revert}
+.app:not(.cinematic) .info-panel .stats,.app:not(.cinematic) .info-panel .detail-list{display:grid}
+.app:not(.cinematic) .info-panel .panel-note,.app:not(.cinematic) .info-panel .details-link{display:flex}
+.app:not(.cinematic) .info-panel h2{font-size:29px;margin:10px 0 13px}
+.app:not(.cinematic) .info-panel .description{font-size:12px;line-height:1.8}
+.app:not(.cinematic) .drawer-close{display:grid}
+.app:not(.cinematic) .side-heading>svg{display:none}
+.panel-close{float:right;display:grid;place-items:center;padding:7px;border:1px solid #3b5a68;background:#102934;color:#d3e7ee}
+.explore-toolbar{position:absolute;top:54px;left:24px;display:flex;gap:7px;pointer-events:auto}
+.explore-toolbar button,.planets-toggle{display:flex;align-items:center;gap:7px;border:1px solid #3c6272;background:#0a1c27e8;color:#d0e8f0;padding:10px 12px;font:10px 'Space Mono',monospace;white-space:nowrap}
+.explore-toolbar button[aria-expanded=true],.planets-toggle[aria-expanded=true]{background:#1d4250;border-color:#84bdca}
+.planets-toggle{flex:none;padding:8px 10px}.planets-toggle svg:last-child{transition:transform .2s}.planets-toggle[aria-expanded=true] svg:last-child{transform:rotate(180deg)}
+.app:not(.cinematic) .center-caption{top:16px;max-width:55%;white-space:normal}
+.app:not(.cinematic) .center-caption h1{font-size:clamp(27px,3vw,40px);margin:5px 0}
+.app:not(.cinematic) .solar-galaxy-shortcut{top:76px}
+.app:not(.cinematic) .breadcrumb{top:20px;left:24px}
+.app:not(.cinematic) .sky-credit{top:20px}
+.app:not(.cinematic) .solar-map .map2d-status{left:18px;right:auto;top:auto;bottom:12px}
+.cinematic .explore-toolbar{display:none}
+@media(max-width:750px){
+ .app:not(.cinematic) .scene{top:60px;bottom:54px}.app:not(.cinematic).planets-open .scene{bottom:124px}
+ .app:not(.cinematic) .center-ui{top:60px;bottom:54px}.app:not(.cinematic).planets-open .center-ui{bottom:124px}
+ .app:not(.cinematic) .bottom{height:54px}.app:not(.cinematic).planets-open .bottom{height:124px}
+ .app:not(.cinematic) .timeline{height:54px;padding:0 10px;gap:10px}
+ .app:not(.cinematic) .left-panel,.app:not(.cinematic) .info-panel{top:60px;bottom:54px;right:auto;max-height:none}
+ .app:not(.cinematic) .info-panel{right:0;left:auto;width:min(330px,calc(100vw - 24px))}
+ .app:not(.cinematic).planets-open .left-panel,.app:not(.cinematic).planets-open .info-panel{bottom:124px}
+ .app:not(.cinematic) .explore-toolbar{top:46px;left:12px;gap:5px}
+ .explore-toolbar button{padding:8px;font-size:9px}
+ .app:not(.cinematic) .center-caption{top:10px;max-width:calc(100% - 24px)}
+ .app:not(.cinematic) .center-caption h1{font-size:30px}
+ .app:not(.cinematic) .breadcrumb{display:none}
+ .app:not(.cinematic) .solar-galaxy-shortcut{top:94px}
+ .app:not(.cinematic) .sky-credit{display:none}
+ .app:not(.cinematic) .scene-actions{left:auto;right:10px;bottom:20px;display:flex;flex-direction:column}
+ .app:not(.cinematic) .scene-actions .camera-controls{display:flex;flex-direction:column}
+ .app:not(.cinematic) .canvas-hint{left:12px;bottom:45px;max-width:155px}
+ .app:not(.cinematic) .solar-map .map2d-status{left:12px;bottom:8px;top:auto}
+ .app:not(.cinematic) .time-label{min-width:120px}.app:not(.cinematic) .time-controls{padding-left:10px}.app:not(.cinematic) .date-control{display:block}
+}
+.app:not(.cinematic) .solar-galaxy-shortcut{position:static;transform:none;display:inline-flex;margin:10px auto 0}
+@media(max-width:750px){.app:not(.cinematic) .explore-toolbar{top:auto;bottom:108px}}

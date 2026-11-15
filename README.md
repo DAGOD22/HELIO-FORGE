@@ -23,6 +23,10 @@ Mission Lab opens with visible entry points to both the design game and the Sola
 
 A science recommendation can explicitly apply the objective's modeled instrument and orbit without changing the rest of the design. The builder shows a first-month model estimate, a preflight checklist with links to relevant subsystems, and launch-hold recovery links. The preflight estimate is not a flight forecast. Re-selecting the current choice does not discard an existing flight. In the 3D assembly view the bus, instrument, power and communications fields highlight their corresponding conceptual geometry; the other subsystem fields do not imply a visible 3D representation. All spacecraft geometry and highlighting remain illustrative.
 
+## Canvas-first exploration
+
+Solar System and galaxy exploration open with the simulator unobstructed. Use **Objects** or **Catalogue** to search and select, and **Details** to open the selected object's profile. The Solar System's **Planets** control expands a quick-selection strip; the time bar, camera controls and galaxy shortcut stay available. The exoplanet system's **Planets & data** button opens its archive and planet list. Close each panel with its close button; Escape closes Solar System and galaxy drawers, and Ctrl/Cmd+K opens catalogue search. On narrow screens the time bars can scroll horizontally for controls that do not fit. Cinematic mode still provides a distraction-free view.
+
 ## Exploring without WebGL
 
 If WebGL cannot start or its context is lost, the Solar System, Milky Way and curated exoplanet views automatically switch to interactive **2D maps**. You can also enable *Lightweight 2D mode* in Solar System display settings or the galaxy catalogue, or use **TRY 3D** to retry WebGL. Selection through the existing catalogues, drag-to-pan, wheel/pinch zoom, keyboard/button zoom, reset and navigation between views continue to work. Mission Lab still uses its separate schematic fallback if WebGL is unavailable. A modern browser with JavaScript and SVG is required; the 2D path is not a guarantee for every device or browser.

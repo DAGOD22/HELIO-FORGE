@@ -17,3 +17,39 @@
 @media(max-width:750px){.galaxy-info.details-expanded{width:min(330px,calc(100vw - 24px));max-height:min(65vh,500px);background:#091720f7}}
 .galaxy-header .return-button{margin-right:8px}.galaxy-mission{display:flex;align-items:center;gap:7px;border:1px solid #416b69;background:#123333;color:#b9e4d9;padding:11px 12px;margin-right:28px;font:9px 'Space Mono';white-space:nowrap}.galaxy-mission:hover{background:#1a4b46}.galaxy-mission:focus-visible{outline:2px solid #b1e9da;outline-offset:2px}@media(max-width:750px){.galaxy-header .return-button{margin-right:6px}.galaxy-mission{margin-right:5px;padding:9px;font-size:8px}}@media(max-width:400px){.galaxy-mission span{display:none}.galaxy-mission{padding:9px}}
 @media(max-width:380px){.galaxy-actions{grid-template-columns:repeat(2,36px);gap:4px}.galaxy-actions .camera-controls{display:grid;grid-template-columns:repeat(2,36px);gap:4px}.galaxy-actions button{width:36px;height:36px}}
+/* Keep the star map open; catalogue and object profile are temporary drawers. */
+.galaxy-app:not(.galaxy-cinematic){height:100dvh;min-height:0}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-main{inset:76px 0 52px}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-catalog,.galaxy-app:not(.galaxy-cinematic) .galaxy-info{top:76px;bottom:52px;width:min(320px,calc(100vw - 24px));z-index:5;background:#081722f7;box-shadow:0 12px 36px #0008;max-height:none}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-catalog[hidden],.galaxy-app:not(.galaxy-cinematic) .galaxy-info[hidden]{display:none}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-catalog.is-open{display:block}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-close{display:block}.galaxy-app:not(.galaxy-cinematic) .galaxy-compass{display:none}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-info{padding:24px;right:0}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-info .g-stat-grid{display:grid}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-info .g-data-note,.galaxy-app:not(.galaxy-cinematic) .galaxy-info .galaxy-link,.galaxy-app:not(.galaxy-cinematic) .galaxy-info .neighbor-section{display:revert}
+.galaxy-panel-close{float:right;display:grid;place-items:center;padding:7px;border:1px solid #3b5a68;background:#102934;color:#d3e7ee}
+.galaxy-workspace-tools{position:absolute;top:54px;left:24px;display:flex;gap:7px;pointer-events:auto}
+.galaxy-workspace-tools button{display:flex;align-items:center;gap:7px;border:1px solid #3c6272;background:#0a1c27e8;color:#d0e8f0;padding:10px 12px;font:10px 'Space Mono',monospace}
+.galaxy-workspace-tools button[aria-expanded=true]{background:#1d4250;border-color:#84bdca}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-caption{top:16px;max-width:58%}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-caption h1{font-size:clamp(28px,3vw,42px);margin:5px 0}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-quick-enter{top:76px}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-map .map2d-status{left:18px;right:auto;bottom:65px;top:auto}
+.galaxy-cinematic .galaxy-workspace-tools{display:none}
+@media(max-width:750px){
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-main{inset:60px 0 40px}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-catalog,.galaxy-app:not(.galaxy-cinematic) .galaxy-info{top:60px;bottom:40px;max-height:none}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-info{right:0;left:auto;width:min(330px,calc(100vw - 24px))}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-workspace-tools{top:46px;left:12px;gap:5px}
+ .galaxy-workspace-tools button{padding:8px;font-size:9px}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-breadcrumb{display:none}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-caption{top:10px;max-width:calc(100% - 24px)}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-caption h1{font-size:30px}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-quick-enter{top:94px}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-actions{left:auto;right:10px;bottom:20px;display:flex;flex-direction:column}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-actions .camera-controls{display:flex;flex-direction:column}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-hint{left:12px;bottom:45px;max-width:155px;white-space:normal;transform:none;line-height:1.5}
+ .galaxy-app:not(.galaxy-cinematic) .galaxy-map .map2d-status{left:12px;bottom:48px;top:auto}
+}
+.galaxy-app:not(.galaxy-cinematic) .galaxy-quick-enter{position:static;transform:none;display:inline-flex;margin:10px auto 0}
+@media(max-width:750px){.galaxy-app:not(.galaxy-cinematic) .galaxy-workspace-tools{top:auto;bottom:108px}}
