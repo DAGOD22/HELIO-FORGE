@@ -16,3 +16,9 @@ test('malformed, oversized, unknown version and duplicate mission links are reje
  assert.equal(inspectMissionUrl('https://example.org/?mission=x&mission=y').status,'invalid');
  assert.equal(inspectMissionUrl('https://example.org/').status,'none');
 });
+test('new campaign conditions are shared while old v1 links migrate to standard',()=>{
+ const design={...DEFAULT_DESIGN,scenario:'clouds'};assert.deepEqual(decodeDesign(encodeDesign(design)),design);
+ const keys=['objective','orbit','bus','instrument','solar','radio','ground','launch','duration'];
+ assert.deepEqual(decodeDesign(JSON.stringify({v:1,d:keys.map(k=>design[k])})),{...design,scenario:'nominal'});
+ assert.throws(()=>decodeDesign(JSON.stringify({v:2,d:[...keys.map(k=>design[k]),'__proto__']})));
+});

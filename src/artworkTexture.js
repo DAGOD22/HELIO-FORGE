@@ -1,10 +1,13 @@
 import * as THREE from 'three';
-import {artworkSeed,planetPalette,starPalette} from './objectArtwork';
+import {artworkSeed,planetPalette,starPalette,planetPattern} from './objectArtwork';
 // Generated artwork, never a map of observed surface features.
 export function makePlanetTexture(name){
  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;const ctx=canvas.getContext('2d'),seed=artworkSeed(name),[light,mid,dark]=planetPalette(name);
  ctx.fillStyle=mid;ctx.fillRect(0,0,512,256);
- for(let i=0;i<32;i++){const h=artworkSeed(seed+':'+i),y=(h%256),height=2+(h>>>8)%16;ctx.globalAlpha=.08+(h%15)/100;ctx.fillStyle=i%2?light:dark;ctx.fillRect(0,y,512,height)}
+ const pattern=planetPattern(name);
+ if(pattern==='banded')for(let i=0;i<32;i++){const h=artworkSeed(seed+':'+i),y=(h%256),height=2+(h>>>8)%16;ctx.globalAlpha=.08+(h%15)/100;ctx.fillStyle=i%2?light:dark;ctx.fillRect(0,y,512,height)}
+ if(pattern==='cratered')for(let i=0;i<140;i++){const h=artworkSeed(seed+':crater:'+i);ctx.globalAlpha=.1+(h%12)/100;ctx.strokeStyle=light;ctx.fillStyle=dark;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(h%512,(h>>>9)%256,2+(h>>>18)%13,0,Math.PI*2);ctx.fill();ctx.stroke()}
+ if(pattern==='marbled')for(let i=0;i<16;i++){const h=artworkSeed(seed+':marble:'+i);ctx.globalAlpha=.12;ctx.strokeStyle=i%2?light:dark;ctx.lineWidth=3+(h%16);ctx.beginPath();ctx.moveTo(h%512,0);ctx.bezierCurveTo((h>>>8)%512,70,(h>>>16)%512,180,h%512,256);ctx.stroke()}
  ctx.globalAlpha=.13;ctx.fillStyle=light;for(let i=0;i<30;i++){const h=artworkSeed(seed+'spot'+i);ctx.beginPath();ctx.ellipse(h%512,(h>>>9)%256,8+(h>>>18)%34,2+(h>>>23)%8,0,0,Math.PI*2);ctx.fill()}
  ctx.globalAlpha=1;const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture;
 }

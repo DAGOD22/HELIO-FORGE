@@ -29,7 +29,7 @@ export function parseHorizonsTrack(result) {
  return samples;
 }
 
-export function createApp({fetchImpl=fetch, apiKey=()=>process.env.NASA_API_KEY, now=()=>new Date()}={}) {
+export function createApp({fetchImpl=fetch, apiKey=()=>process.env.NASA_API_KEY, now=()=>new Date(), serveStatic=true}={}) {
  const app=express(),cache=new Map();
  async function load(res,cacheKey,url,{source,parse=(data)=>data}={}) {
   const time=now().getTime(),hit=cache.get(cacheKey);
@@ -88,6 +88,7 @@ export function createApp({fetchImpl=fetch, apiKey=()=>process.env.NASA_API_KEY,
   const url=new URL('https://api.nasa.gov/'+endpoint);url.searchParams.set('api_key',key);
   return load(res,`nasa:${req.params.dataset}:${nowDate}`,url,{source:'NASA Open APIs'});
  });
- app.use(express.static('dist'));app.get('*',(_req,res)=>res.sendFile(path.resolve('dist/index.html')));
+ app.use('/api',(_req,res)=>res.status(404).json({error:'Unknown API endpoint'}));
+ if(serveStatic){app.use(express.static('dist'));app.get('*',(_req,res)=>res.sendFile(path.resolve('dist/index.html')));}
  return app;
 }

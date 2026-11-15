@@ -12,3 +12,6 @@ export function starPalette(star){
 }
 const planetPalettes=[['#ddac81','#a15f58','#432d39'],['#bdd5d5','#64949f','#243e52'],['#e4cfaa','#b88b68','#55435b'],['#c4b3d8','#80769e','#333450'],['#c5c9b6','#879481','#3b5051'],['#e6c7a2','#c7826b','#54394a']];
 export function planetPalette(name){return planetPalettes[artworkSeed(name)%planetPalettes.length]}
+
+// Pattern choice is decorative; it is not a composition or planet classification.
+export function planetPattern(name){return ['banded','cratered','marbled'][artworkSeed('pattern:'+name)%3]}

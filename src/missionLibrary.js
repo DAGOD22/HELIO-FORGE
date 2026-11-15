@@ -2,14 +2,14 @@ import {calculate} from './missionModel.js';
 
 export const LIBRARY_KEY='cosmos-mission-library-v1';
 export const MAX_DESIGNS=5;
-const DESIGN_KEYS=['objective','orbit','bus','instrument','solar','radio','ground','launch','duration'];
+const DESIGN_KEYS=['objective','orbit','bus','instrument','solar','radio','ground','launch','duration','scenario'];
 export function cleanLibrary(value){
  if(!Array.isArray(value))return [];
  const seen=new Set(),out=[];
  for(const entry of value){
   if(out.length===MAX_DESIGNS)break;
   if(!entry||typeof entry.id!=='string'||!/^[a-zA-Z0-9-]{1,80}$/.test(entry.id)||seen.has(entry.id)||typeof entry.name!=='string'||!entry.name.trim()||entry.name.length>48||typeof entry.savedAt!=='string'||!Number.isFinite(Date.parse(entry.savedAt)))continue;
-  try{calculate(entry.design);const design=Object.fromEntries(DESIGN_KEYS.map(key=>[key,entry.design[key]]));out.push({id:entry.id,name:entry.name.trim(),savedAt:entry.savedAt,design});seen.add(entry.id)}catch{/* Ignore corrupted or outdated entries. */}
+  try{calculate(entry.design);const design=Object.fromEntries(DESIGN_KEYS.map(key=>[key,key==='scenario'?(entry.design[key]??'nominal'):entry.design[key]]));out.push({id:entry.id,name:entry.name.trim(),savedAt:entry.savedAt,design});seen.add(entry.id)}catch{/* Ignore corrupted or outdated entries. */}
  }
  return out;
 }

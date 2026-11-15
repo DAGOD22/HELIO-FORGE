@@ -119,3 +119,19 @@
 }
 .app:not(.cinematic) .solar-galaxy-shortcut{position:static;transform:none;display:inline-flex;margin:10px auto 0}
 @media(max-width:750px){.app:not(.cinematic) .explore-toolbar{top:auto;bottom:108px}}
+.earth-mission-handoff{margin:18px 0;padding:14px;border:1px solid #426b71;background:#102c31}.earth-mission-handoff>span{font:9px 'Space Mono',monospace;color:#a4dad5;letter-spacing:.06em}.earth-mission-handoff h3{font-size:16px;font-weight:500;margin:8px 0}.earth-mission-handoff p{font-size:11px;line-height:1.5;color:#aac5c9}.earth-mission-handoff button{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;margin-top:5px;padding:9px 10px;background:#193c42;border:1px solid #426a6c;color:#e1f3ef;font-size:11px}.earth-mission-handoff button:hover{background:#27545a}
+.time-options-toggle,.mobile-time-options{display:none}
+@media(max-width:750px){
+ .app:not(.cinematic) .timeline{overflow-x:hidden;justify-content:space-between;gap:5px}
+ .app:not(.cinematic) .timeline>.time-label,.app:not(.cinematic) .timeline>.speed,.app:not(.cinematic) .timeline>.date-control{display:none}
+ .app:not(.cinematic) .timeline .time-controls{border:0;padding:0;gap:7px}
+ .app:not(.cinematic) .timeline .time-controls button{width:32px;height:36px}
+ .time-options-toggle{display:flex;align-items:center;gap:6px;padding:8px;border:1px solid #3c6272;background:#0a1c27;color:#d0e8f0;font:10px 'Space Mono',monospace}
+ .mobile-time-options{display:block;position:absolute;z-index:7;right:10px;bottom:62px;width:min(260px,calc(100vw - 20px));padding:15px;background:#10232df7;border:1px solid #527787;box-shadow:0 8px 30px #0009}
+ .planets-open .mobile-time-options{bottom:132px}.mobile-time-heading{display:flex;justify-content:space-between;align-items:center;color:#cce5ea;font:10px 'Space Mono',monospace}.mobile-time-heading button{border:0;background:none;color:#d2e8ef;padding:5px}.mobile-time-options p{font-size:12px;color:#c6dce2}.mobile-time-options .speed,.mobile-time-options .date-control{display:block;border:0;padding:10px 0}.mobile-time-options small{font-size:10px}.mobile-time-options select,.mobile-time-options input{font-size:13px;width:100%;padding:6px;border:1px solid #486674;background:#0a1a23}
+ .explore-toolbar button,.galaxy-workspace-tools button{font-size:10px}
+}
+.explore-guide{position:relative;pointer-events:auto}.explore-guide summary{display:flex;align-items:center;justify-content:center;height:100%;padding:9px 12px;border:1px solid #3c6272;background:#0a1c27e8;color:#d0e8f0;font:10px 'Space Mono',monospace;cursor:pointer;list-style:none}.explore-guide summary::-webkit-details-marker{display:none}.explore-guide summary:focus-visible{outline:2px solid #78c5e6;outline-offset:2px}.explore-guide[open] summary{background:#1d4250}.explore-guide-card{position:absolute;top:calc(100% + 8px);left:0;width:260px;padding:15px;border:1px solid #50727e;background:#0b202af7;color:#d7e9ee;box-shadow:0 12px 32px #0009;font:12px/1.55 'DM Sans',sans-serif}.explore-guide-card p{color:#b3cbd3;margin:8px 0 0}.explore-guide-card b{font-size:13px}
+@media(max-width:750px){.explore-guide summary{padding:8px}.explore-guide-card{top:auto;bottom:calc(100% + 8px);left:auto;right:0;width:min(260px,calc(100vw - 24px))}}
+.app:not(.cinematic) .bottom{z-index:5}
+@media(max-width:750px){.mobile-time-options .speed select{max-width:none}}

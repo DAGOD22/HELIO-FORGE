@@ -17,3 +17,8 @@ test('validates corrupted, invalid and over-limit data',()=>{
  assert.throws(()=>addLibraryDesign(entries,'One more',DEFAULT_DESIGN,'extra',time),/up to 5/);
  assert.throws(()=>addLibraryDesign(entries.slice(0,1),'duplicate id',DEFAULT_DESIGN,'item-0',time));
 });
+test('saved designs without campaign conditions migrate to standard campaign',()=>{
+ const {scenario,...old}=DEFAULT_DESIGN;
+ const entries=cleanLibrary([{id:'old',name:'Legacy',savedAt:time,design:old}]);
+ assert.deepEqual(entries[0].design,DEFAULT_DESIGN);
+});

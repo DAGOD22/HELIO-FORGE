@@ -1,16 +1,16 @@
 import {calculate} from './missionModel.js';
 
 // Compact versioned link format; results and personal data are never included.
-const KEYS=['objective','orbit','bus','instrument','solar','radio','ground','launch','duration'];
+const KEYS=['objective','orbit','bus','instrument','solar','radio','ground','launch','duration','scenario'];
 export function encodeDesign(design){
  calculate(design);
- return JSON.stringify({v:1,d:KEYS.map(key=>design[key])});
+ return JSON.stringify({v:2,d:KEYS.map(key=>key==='scenario'?(design.scenario??'nominal'):design[key])});
 }
 export function decodeDesign(text){
  if(typeof text!=='string'||text.length>500)throw new Error('Invalid mission link');
  let data;try{data=JSON.parse(text)}catch{throw new Error('Invalid mission link')}
- if(!data||data.v!==1||!Array.isArray(data.d)||data.d.length!==KEYS.length||data.d.some(v=>typeof v!=='string'))throw new Error('Invalid mission link');
- const design=Object.fromEntries(KEYS.map((key,i)=>[key,data.d[i]]));
+ if(!data||![1,2].includes(data.v)||!Array.isArray(data.d)||data.d.length!==(data.v===1?KEYS.length-1:KEYS.length)||data.d.some(v=>typeof v!=='string'))throw new Error('Invalid mission link');
+ const design=Object.fromEntries(KEYS.map((key,i)=>[key,key==='scenario'&&data.v===1?'nominal':data.d[i]]));
  calculate(design);
  return design;
 }

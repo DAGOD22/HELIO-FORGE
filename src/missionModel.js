@@ -17,9 +17,18 @@ export const OPTIONS={
  launch:{rideshare:{name:'Rideshare',detail:'Lower cost · 25 kg capacity',cost:3,capacity:25},dedicated:{name:'Dedicated small launch',detail:'More capacity · 40 kg capacity',cost:7,capacity:40}},
  duration:{12:{name:'12 months',detail:'Shorter campaign · $2M operations',months:12,cost:2},24:{name:'24 months',detail:'More science time · $4M operations',months:24,cost:4}},
 };
-export const DEFAULT_DESIGN={objective:'fire',orbit:'polar',bus:'compact',instrument:'thermal',solar:'deploy',radio:'high',ground:'single',launch:'rideshare',duration:'12'};
+// Alternative fictional campaign conditions. These are game rules, not a forecast
+// or observations of a particular region, spacecraft or date.
+export const SCENARIOS={
+ nominal:{name:'Standard campaign',detail:'Baseline assumptions for comparison.'},
+ clouds:{name:'Cloudy observing windows',detail:'In months 2, 5, 8 and every third month after, collection duty is capped at 60%.'},
+ outages:{name:'Intermittent ground network',detail:'Every third month, downlink capacity is reduced by 45%.'},
+};
+export const DEFAULT_DESIGN={objective:'fire',orbit:'polar',bus:'compact',instrument:'thermal',solar:'deploy',radio:'high',ground:'single',launch:'rideshare',duration:'12',scenario:'nominal'};
 export function calculate(design){
  if(!design||!Object.hasOwn(OBJECTIVES,design.objective)||Object.keys(OPTIONS).some(key=>!Object.hasOwn(OPTIONS[key],design[key]))) throw new Error('Invalid mission design');
+ const scenario=design.scenario??'nominal';
+ if(!Object.hasOwn(SCENARIOS,scenario))throw new Error('Invalid campaign scenario');
  const objective=OBJECTIVES[design.objective];
  const parts=Object.fromEntries(Object.keys(OPTIONS).map(key=>[key,OPTIONS[key][design[key]]]));
  const {bus,instrument,solar,radio,ground,launch,orbit,duration}=parts;
@@ -30,11 +39,12 @@ export function calculate(design){
  // Circular two-body period; all loads run through the assumed eclipse fraction.
  const periodHours=2*Math.PI*Math.sqrt((EARTH_RADIUS_KM+orbit.altitude)**3/EARTH_GM_KM3_S2)/3600;
  const eclipseWh=load*periodHours*(1-orbit.sun);
- return {objective,parts,mass,cost,load,averagePower,periodHours,eclipseWh,downlink:radio.capacity*ground.factor*orbit.contact,canLaunch:mass<=launch.capacity&&cost<=objective.budget};
+ return {objective,scenario:SCENARIOS[scenario],scenarioId:scenario,parts,mass,cost,load,averagePower,periodHours,eclipseWh,downlink:radio.capacity*ground.factor*orbit.contact,canLaunch:mass<=launch.capacity&&cost<=objective.budget};
 }
 export function simulate(design, decisions={}){
  const solarDecision=decisions.solar==='conserve'?'conserve':'push';
  const contactDecision=decisions.contacts==='conserve'?'conserve':'push';
+ const strategyDecision=decisions.strategy==='conserve'?'conserve':'push';
  const c=calculate(design),{bus,instrument,solar,orbit,duration}=c.parts;
  if(!c.canLaunch)return {...c,launched:false};
  let stored=0,returned=0,lost=0,produced=0;
@@ -47,16 +57,18 @@ export function simulate(design, decisions={}){
   const sciencePower=Math.max(0,Math.min(1,(generation-bus.power-c.parts.radio.power)/instrument.power));
   const batteryFactor=Math.min(1,bus.battery/c.eclipseWh);
   const availability=Math.min(1,generation/(bus.power+c.parts.radio.power),batteryFactor);
-  const duty=Math.min(month>=4&&solarDecision==='conserve'?.75:1,month===7&&contactDecision==='conserve'?.5:1);
+  const scenarioDuty=c.scenarioId==='clouds'&&month%3===2?.6:1;
+  const scenarioContact=c.scenarioId==='outages'&&month%3===0?.55:1;
+  const duty=Math.min(month>=4&&solarDecision==='conserve'?.75:1,month===7&&contactDecision==='conserve'?.5:1,month===10&&strategyDecision==='conserve'?.65:1,scenarioDuty);
   const energyPower=Math.min(sciencePower,batteryFactor);
   const power=Math.min(energyPower,duty);
   let monthReturn=0,monthLoss=0;
   for(let day=0;day<30;day++){
    const made=instrument.data*power; produced+=made; stored+=made;
    const overflow=Math.max(0,stored-bus.storage);lost+=overflow;monthLoss+=overflow;stored-=overflow;
-   const sent=Math.min(stored,c.downlink*availability*(month===7?.5:1));stored-=sent;returned+=sent;monthReturn+=sent;
+   const sent=Math.min(stored,c.downlink*availability*scenarioContact*(month===7?.5:1)*(month===10&&strategyDecision==='conserve'?1.4:1));stored-=sent;returned+=sent;monthReturn+=sent;
   }
-  timeline.push({month,returned:monthReturn,stored,lost:monthLoss,power,energyPower,duty,cumulativeReturned:returned,cumulativeLost:lost,cumulativeProduced:produced,event:month===4?(solarDecision==='conserve'?'Solar output reduced 10%; science duty capped at 75%.':'Solar output reduced 20% for the rest of the mission.'):month===7?(contactDecision==='conserve'?'Ground contacts halved; science duty capped at 50% this month.':'Ground contacts halved this month.'):null});
+  timeline.push({month,returned:monthReturn,stored,lost:monthLoss,power,energyPower,duty,scenarioDuty,scenarioContact,cumulativeReturned:returned,cumulativeLost:lost,cumulativeProduced:produced,event:[month===4?(solarDecision==='conserve'?'Solar output reduced 10%; science duty capped at 75%.':'Solar output reduced 20% for the rest of the mission.'):month===7?(contactDecision==='conserve'?'Ground contacts halved; science duty capped at 50% this month.':'Ground contacts halved this month.'):null,month===10?(strategyDecision==='conserve'?'Downlink priority: 40% extra assumed contact capacity; science duty capped at 65%.':'Science priority: normal contact capacity and full duty requested.'):null,scenarioDuty<1?'Scenario: observing duty capped at 60%.':null,scenarioContact<1?'Scenario: downlink capacity reduced 45%.':null].filter(Boolean).join(' ')||null});
  }
  const fit=design.instrument===c.objective.instrument?1:0;
  const orbitFit=design.orbit===c.objective.orbit?1:.7;
@@ -67,9 +79,10 @@ export function simulate(design, decisions={}){
  if(orbitFit<1)advice.push('Try the recommended orbit for this objective to improve observation quality.');
  if(c.averagePower<c.load||timeline.some(t=>t.energyPower<.99&&t.month<=bus.life))advice.push('Science was power-limited. Try deployable arrays or reduce the load.');
  if(c.eclipseWh>bus.battery)advice.push('Eclipse energy exceeds battery capacity. Try the extended bus or a lower-power design.');
- if(timeline.some(t=>t.duty<.99&&t.power===t.duty))advice.push('Your operating choices reduced collection to protect the array or avoid overflow. Compare another response to see the trade-off.');
+ if(timeline.some(t=>t.duty<.99&&t.power===t.duty))advice.push('Your operating choices or campaign conditions reduced collection. Compare a different response or scenario to see the trade-off.');
+ if(c.scenarioId!=='nominal')advice.push('Compare against the standard campaign to isolate the effect of these invented conditions.');
  if(lost>1)advice.push('Storage overflow discarded data. Increase downlink capacity or onboard storage.');
  if(duration.months>bus.life)advice.push('The selected campaign exceeds bus design life. Choose the extended bus or a shorter campaign.');
  if(!advice.length)advice.push('This design met its modeled constraints. Try reducing cost or testing a different objective.');
- return {...c,launched:true,decisions:{solar:solarDecision,contacts:contactDecision},score,returned,produced,lost,stored,target,fit,orbitFit,timeline,advice};
+ return {...c,launched:true,decisions:{solar:solarDecision,contacts:contactDecision,strategy:strategyDecision},score,returned,produced,lost,stored,target,fit,orbitFit,timeline,advice};
 }

@@ -46,3 +46,7 @@ test('NASA Blue Marble texture has verified bytes',async()=>{
  const {createHash}=await import('node:crypto');const data=await readFile(new URL('../public/textures/earth_blue_marble_4k.jpg',import.meta.url));
  assert.equal(createHash('sha256').update(data).digest('hex'),'228deba2e4b600146bdcb6cfa359b8ead6aacc2b1c13550a29cd82824cfa1c01');
 });
+test('all catalogue previews have lightweight local thumbnails',async()=>{
+ const {allObjects}=await import('../src/data.js');const {statSync}=await import('node:fs');
+ for(const file of new Set(allObjects.map(o=>o.texture).filter(Boolean)))assert.ok(statSync(new URL('../public/thumbs/'+file,import.meta.url)).size<50000,file);
+});

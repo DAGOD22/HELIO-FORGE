@@ -47,3 +47,23 @@ test('player-imposed duty limits are not mislabeled as power shortfalls',()=>{
  assert.ok(result.advice.some(a=>a.includes('operating choices')));
  assert.ok(!result.advice.some(a=>a.includes('power-limited')));
 });
+test('fictional campaign conditions change outcomes reproducibly and conserve data',()=>{
+ const standard=simulate(DEFAULT_DESIGN),clouds=simulate({...DEFAULT_DESIGN,scenario:'clouds'}),outages=simulate({...DEFAULT_DESIGN,scenario:'outages'});
+ assert.deepEqual(clouds,simulate({...DEFAULT_DESIGN,scenario:'clouds'}));
+ assert.equal(clouds.timeline[1].scenarioDuty,.6);assert.equal(clouds.timeline[0].scenarioDuty,1);
+ assert.equal(outages.timeline[2].scenarioContact,.55);assert.equal(outages.timeline[1].scenarioContact,1);
+ assert.ok(clouds.produced<standard.produced);assert.ok(outages.returned<standard.returned);
+ for(const r of [standard,clouds,outages])near(r.produced,r.returned+r.lost+r.stored);
+ assert.throws(()=>calculate({...DEFAULT_DESIGN,scenario:'__proto__'}));
+});
+test('all campaign conditions remain finite across all design combinations',()=>{
+ const keys=Object.keys(OPTIONS);let runs=0;
+ function visit(d,i){if(i===keys.length){for(const objective of Object.keys(OBJECTIVES))for(const scenario of ['nominal','clouds','outages']){const r=simulate({...d,objective,scenario});if(!r.launched)continue;runs++;near(r.produced,r.returned+r.lost+r.stored);assert.ok(Number.isFinite(r.score)&&r.score>=0&&r.score<=100);assert.ok(r.stored<=r.parts.bus.storage+1e-8)}return}for(const value of Object.keys(OPTIONS[keys[i]]))visit({...d,[keys[i]]:value},i+1)}visit({},0);assert.ok(runs>300);
+});
+test('month ten downlink choice cannot rewrite earlier history and has an explicit tradeoff',()=>{
+ const base={...DEFAULT_DESIGN,radio:'low'},a=simulate(base,{strategy:'push'}),b=simulate(base,{strategy:'conserve'});
+ assert.deepEqual(a.timeline.slice(0,9),b.timeline.slice(0,9));
+ assert.ok(b.timeline[9].power<=a.timeline[9].power);assert.match(b.timeline[9].event,/40% extra/);
+ assert.notEqual(a.timeline[9].returned,b.timeline[9].returned);
+ for(const r of [a,b])near(r.produced,r.returned+r.lost+r.stored);
+});
