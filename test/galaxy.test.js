@@ -79,3 +79,23 @@ test('dense illustrative galaxy supports a million-point budget without invalid 
  assert.equal(data.positions.length,3600000);assert.equal(data.colors.length,3600000);
  for(let i=0;i<data.positions.length;i+=1379){assert.ok(Number.isFinite(data.positions[i]));assert.ok(data.colors[i]>=0&&data.colors[i]<=1)}
 });
+
+test('catalogue magnitude maps to bounded symbolic sprite brightness',async()=>{
+ const {symbolicStarBrightness}=await import('../src/galaxyModel.js');
+ assert.equal(symbolicStarBrightness(null),.45);assert.equal(symbolicStarBrightness(-10),1);assert.equal(symbolicStarBrightness(50),0);assert.ok(symbolicStarBrightness(1)>symbolicStarBrightness(9));
+});
+
+test('galactic emission is bounded deterministic artwork with a finite disk',async()=>{
+ const {sampleGalacticEmission}=await import('../src/galacticEmission.js');
+ const center=sampleGalacticEmission(0,0),outer=sampleGalacticEmission(80000,0);
+ assert.deepEqual(center,sampleGalacticEmission(0,0));assert.ok(center.every(n=>Number.isInteger(n)&&n>=0&&n<=255));assert.ok(center[3]>0);assert.equal(outer[3],0);
+});
+
+test('decorative galactic knots are deterministic samples of the synthetic overview',async()=>{
+ const {schematicGalaxy,illustrativeGalaxyKnots}=await import('../src/galaxyModel.js');
+ const source=schematicGalaxy(100),first=illustrativeGalaxyKnots(source,20),second=illustrativeGalaxyKnots(source,20);
+ assert.deepEqual(first,second);assert.equal(first.positions.length,60);assert.equal(first.colors.length,60);
+ for(let i=0;i<20;i++)assert.deepEqual([...first.positions.slice(i*3,i*3+3)],[...source.positions.slice(i*15,i*15+3)]);
+ assert.equal(illustrativeGalaxyKnots(source,1000).positions.length,300);
+ assert.equal(illustrativeGalaxyKnots(source,0).positions.length,0);
+});

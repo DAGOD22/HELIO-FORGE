@@ -49,3 +49,22 @@ export function closestCatalogStars(reference,stars,limit=5){
  const origin=starPositionLy(reference);
  return stars.filter(star=>star.id!==reference.id).map(star=>({star,distanceLy:Math.hypot(...starPositionLy(star).map((value,i)=>value-origin[i]))})).filter(item=>Number.isFinite(item.distanceLy)).sort((a,b)=>a.distanceLy-b.distanceLy||a.star.id-b.star.id).slice(0,limit);
 }
+
+// Display-only mapping of HYG apparent magnitude to a bounded symbolic sprite.
+// This is not a stellar radius, luminosity calibration or distance-dependent view.
+export function symbolicStarBrightness(magnitude){return Number.isFinite(magnitude)?Math.max(0,Math.min(1,(11-magnitude)/12)):.45;}
+
+// Art-directed star-forming-looking knots sampled from the synthetic overview.
+// These are luminous decoration, not a catalogue, measured nebulae or dust map.
+export function illustrativeGalaxyKnots(schematic, count=1600){
+ const available=Math.floor(schematic.positions.length/3),n=Math.max(0,Math.min(available,Math.floor(count)));
+ const positions=new Float32Array(n*3),colors=new Float32Array(n*3);
+ for(let i=0;i<n;i++){
+  const source=Math.floor(i*available/n)*3,j=i*3;
+  positions[j]=schematic.positions[source];positions[j+1]=schematic.positions[source+1];positions[j+2]=schematic.positions[source+2];
+  // Blue, rose and warm accents remain deliberately symbolic.
+  const palette=i%7===0?[1,.42,.55]:i%3===0?[.53,.72,1]:[.95,.68,.48];
+  colors.set(palette,j);
+ }
+ return {positions,colors};
+}

@@ -1,0 +1,17 @@
+import React,{useId} from 'react';
+import {artworkSeed,starPalette,planetPalette} from './objectArtwork';
+import './objectArtwork.css';
+
+// Details are seeded per catalogue ID, not claims of measured surface features.
+export function StarArtwork({star,className=''}){
+ const uid=useId().replace(/:/g,''),seed=artworkSeed(star?.id??star?.name),color=starPalette(star);
+ const freckles=Array.from({length:18},(_,i)=>{const n=artworkSeed(seed+':'+i),angle=n%360*Math.PI/180,r=Math.sqrt(((n>>>9)%900)/1000)*37;return {x:50+Math.cos(angle)*r,y:50+Math.sin(angle)*r,r:1+(n>>>20)%5,opacity:.07+(n%7)/100}});
+ return <svg className={'object-art '+className} viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id={uid+'halo'}><stop stopColor={color.middle} stopOpacity=".65"/><stop offset=".55" stopColor={color.edge} stopOpacity=".18"/><stop offset="1" stopColor={color.edge} stopOpacity="0"/></radialGradient><radialGradient id={uid+'disc'} cx="35%" cy="30%"><stop stopColor={color.core}/><stop offset=".65" stopColor={color.middle}/><stop offset="1" stopColor={color.edge}/></radialGradient><clipPath id={uid+'clip'}><circle cx="50" cy="50" r="29"/></clipPath></defs><circle cx="50" cy="50" r="49" fill={'url(#'+uid+'halo)'}/><circle cx="50" cy="50" r="32" fill="none" stroke={color.middle} strokeOpacity=".23"/><circle cx="50" cy="50" r="29" fill={'url(#'+uid+'disc)'}/><g clipPath={'url(#'+uid+'clip)'}>{freckles.map((f,i)=><circle key={i} cx={f.x} cy={f.y} r={f.r} fill={i%2?color.edge:color.core} opacity={f.opacity}/>)}<path d="M13 49 Q32 39 50 48 T89 44 M15 59 Q35 51 52 58 T86 55 M19 37 Q35 30 51 36 T83 33" fill="none" stroke={color.core} strokeWidth="1.1" opacity=".22"/></g><circle cx="50" cy="50" r="29" fill="none" stroke={color.core} strokeOpacity=".45" strokeWidth=".5"/></svg>
+}
+export function PlanetArtwork({name,className=''}){
+ const uid=useId().replace(/:/g,''),seed=artworkSeed(name),[light,mid,dark]=planetPalette(name),offset=seed%8;
+ return <svg className={'object-art '+className} viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id={uid+'disc'} cx="32%" cy="25%" r="75%"><stop stopColor={light}/><stop offset=".52" stopColor={mid}/><stop offset="1" stopColor={dark}/></radialGradient><clipPath id={uid+'clip'}><circle cx="50" cy="50" r="31"/></clipPath></defs><circle cx="50" cy="50" r="37" fill={mid} opacity=".1"/><circle cx="50" cy="50" r="31" fill={'url(#'+uid+'disc)'}/><g clipPath={'url(#'+uid+'clip)'} transform={`rotate(${(seed%25)-12} 50 50)`}>{Array.from({length:7},(_,i)=><path key={i} d={`M 12 ${22+i*9+offset} Q 33 ${17+i*9+offset} 53 ${23+i*9+offset} T 89 ${21+i*9+offset}`} fill="none" stroke={i%2?light:dark} strokeWidth={i%3===0?3:1.5} opacity={i%2?.22:.17}/>)}<ellipse cx={36+seed%25} cy={43+seed%12} rx="9" ry="3" fill={light} opacity=".18"/></g><circle cx="50" cy="50" r="31" fill="none" stroke={light} opacity=".45" strokeWidth=".6"/></svg>
+}
+export function ArtworkCard({type,object}){
+ const star=type==='star';return <div className="artwork-card"><div className="artwork-visual">{star?<StarArtwork star={object}/>:<PlanetArtwork name={object.pl_name}/>}<span>ARTIST'S IMPRESSION</span></div><div className="artwork-caption">{star?'Procedural star portrait · '+starPalette(object).basis:'Procedural planet portrait · colors and surface invented'}. Not an observation or to scale.</div></div>
+}

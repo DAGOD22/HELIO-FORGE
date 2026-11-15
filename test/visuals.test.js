@@ -25,3 +25,24 @@ test('NASA star map selects a GPU-compatible panorama and registers it for dispo
  assert.deepEqual(calls,['/graphics/nasa-deep-star-map-4k.jpg','/graphics/nasa-deep-star-map-2k.jpg']);
  assert.deepEqual(textures,[large,small]);assert.equal(large.mapping,small.mapping);assert.equal(large.colorSpace,small.colorSpace);
 });
+
+test('surface and atmosphere shaders use scene-relative sunlight and logarithmic depth',async()=>{
+ const {surfaceVertex,surfaceFragment,atmosphereVertex,atmosphereFragment,ringVertex,ringFragment,makeAtmosphereMaterial}=await import('../src/visuals.js');
+ const {Vector3}=await import('three');const position=new Vector3(3,4,5),material=makeAtmosphereMaterial('earth',position);
+ assert.equal(material.uniforms.sunPosition.value,position);assert.match(surfaceFragment,/sunPosition-vWorldPosition/);assert.match(atmosphereFragment,/sunPosition-vWorld/);
+ for(const vertex of [surfaceVertex,atmosphereVertex,ringVertex]){assert.match(vertex,/#include <common>/);assert.match(vertex,/#include <logdepthbuf_vertex>/)}
+ for(const fragment of [surfaceFragment,atmosphereFragment,ringFragment])assert.match(fragment,/#include <logdepthbuf_fragment>/);
+ material.dispose();
+});
+
+test('cinematic glow uses reduced blur dimensions and bypasses cleanly',async()=>{
+ const {bloomDimensions,createCinematicEffects}=await import('../src/cinematicEffects.js');
+ assert.deepEqual(bloomDimensions(1000,500,2),[1000,500]);assert.deepEqual(bloomDimensions(1,1,1),[1,1]);
+ const scene={},camera={},calls=[];const renderer={render:(s,c)=>calls.push([s,c])};
+ const effects=createCinematicEffects(renderer,scene,camera);effects.resize(800,600);effects.render(false);effects.dispose();assert.deepEqual(calls,[[scene,camera]]);
+});
+
+test('NASA Blue Marble texture has verified bytes',async()=>{
+ const {createHash}=await import('node:crypto');const data=await readFile(new URL('../public/textures/earth_blue_marble_4k.jpg',import.meta.url));
+ assert.equal(createHash('sha256').update(data).digest('hex'),'228deba2e4b600146bdcb6cfa359b8ead6aacc2b1c13550a29cd82824cfa1c01');
+});

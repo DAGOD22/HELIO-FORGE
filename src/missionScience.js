@@ -1,0 +1,6 @@
+// Real mission context, not parameters or validation for the illustrative game.
+export const SCIENCE_CONTEXT={
+ fire:{mission:'VIIRS / ACTIVE FIRE',title:'Finding heat from orbit',body:'NASA’s VIIRS active-fire product uses infrared observations to identify thermal anomalies. A detection may represent fire or another heat source; it is not a measured fire perimeter.',source:'NASA Earthdata · VIIRS active fire',url:'https://www.earthdata.nasa.gov/data/instruments/viirs/viirs-i-band-375-m-active-fire-data'},
+ ocean:{mission:'PACE / OCEAN COLOR',title:'Reading the color of the ocean',body:'NASA’s PACE Ocean Color Instrument measures the spectrum of light reflected from the ocean to study phytoplankton. PACE uses a hyperspectral spectrometer; this game’s camera is only a simplified analogy.',source:'NASA Earthdata · Ocean color',url:'https://www.earthdata.nasa.gov/topics/ocean/ocean-color/data-access-tools'},
+ air:{mission:'AURA / OMI',title:'Measuring the atmosphere',body:'The Ozone Monitoring Instrument on NASA’s Aura satellite uses ultraviolet and visible light to measure atmospheric constituents including ozone and nitrogen dioxide.',source:'NASA Science · Aura OMI',url:'https://science.nasa.gov/mission/aura/omi/'},
+};
