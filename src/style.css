@@ -136,3 +136,5 @@
 .app:not(.cinematic) .bottom{z-index:5}
 @media(max-width:750px){.mobile-time-options .speed select{max-width:none}}
 @media(max-width:750px){.brand{gap:7px}.brand b{font-size:11px;letter-spacing:.1em;white-space:nowrap}.brand small{font-size:7px;letter-spacing:.08em}}
+.app:not(.cinematic) .si-sky-credit{display:block;top:auto;bottom:12px;right:16px;max-width:none;padding:4px 6px;background:#07131ed9;color:#e0efee;pointer-events:none}
+@media(max-width:750px){.app:not(.cinematic) .si-sky-credit{top:auto;bottom:8px;left:12px;right:auto;font-size:8px}}

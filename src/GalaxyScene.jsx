@@ -8,11 +8,21 @@ import {zoomCamera} from './cameraNavigation';
 import {createCinematicEffects} from './cinematicEffects';
 import {attachZoomBoundary} from './zoomBoundary';
 import {schematicGalaxy,illustrativeGalaxyKnots,starPositionLy,positionFromEquatorialLy,SUN_GALACTIC_RADIUS_LY,symbolicStarBrightness} from './galaxyModel';
-import {DEEP_SKY,DEEP_SKY_BY_ID} from './deepSky';
+import {DEEP_SKY,DEEP_SKY_BY_ID,DEEP_SKY_IMAGES} from './deepSky';
+import {clusterPoints} from './landmarkArtwork';
+import {stellarFragment} from './stellarGlyph';
 
 const vec=a=>new THREE.Vector3(...a);
 function discTexture(){const c=document.createElement('canvas');c.width=c.height=64;const ctx=c.getContext('2d'),g=ctx.createRadialGradient(32,32,1,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.18,'rgba(255,255,255,.8)');g.addColorStop(.5,'rgba(255,255,255,.16)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);}
 function markerLabel(text){const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d');ctx.fillStyle='rgba(4,14,25,.82)';ctx.fillRect(0,6,512,70);ctx.font='500 28px sans-serif';ctx.fillStyle='#d9eaf2';ctx.fillText(text,14,53);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
+// Flat observation thumbnails used as symbolic screen-facing markers, not 3D reconstructions.
+function landmarkTexture(object){
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=128;const ctx=canvas.getContext('2d');let alive=true,image=null;
+ const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+ function draw(source){if(!alive)return;ctx.clearRect(0,0,128,128);ctx.fillStyle='#0b1d2b';ctx.beginPath();ctx.arc(64,64,55,0,Math.PI*2);ctx.fill();ctx.save();ctx.beginPath();ctx.arc(64,64,54,0,Math.PI*2);ctx.clip();if(source){const side=Math.min(source.naturalWidth,source.naturalHeight);ctx.drawImage(source,(source.naturalWidth-side)/2,(source.naturalHeight-side)/2,side,side,10,10,108,108)}else{for(const p of clusterPoints(object.id)){ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x*1.28,p.y*1.28,p.r*1.28,0,Math.PI*2);ctx.fill()}}ctx.restore();ctx.strokeStyle='#bddde8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(64,64,55,0,Math.PI*2);ctx.stroke();texture.needsUpdate=true}
+ draw(null);const file=DEEP_SKY_IMAGES[object.id]?.file;if(file){image=new Image();image.onload=()=>draw(image);image.src='/deepsky/'+file}
+ return {texture,dispose(){alive=false;if(image){image.onload=null;image.onerror=null}texture.dispose()}};
+}
 function starColor(ci){if(ci==null)return new THREE.Color('#d8e6ff');if(ci<.25)return new THREE.Color('#b4d5ff');if(ci<.8)return new THREE.Color('#fff1d5');if(ci<1.4)return new THREE.Color('#ffd2a1');return new THREE.Color('#f5a78c');}
 export default function GalaxyScene({stars,selection,request,onSelect,showLandmarks,neighbors,showNeighbors,onZoomInto,canZoomInto,density,onDensity,gaiaData,gaiaStar,onGaiaDrawn,navigationRef,effects}){
  const mount=useRef(),current=useRef({stars,selection,request,onSelect,showLandmarks,neighbors,showNeighbors,onZoomInto,canZoomInto,onDensity,gaiaData,gaiaStar,onGaiaDrawn,effects});
@@ -54,17 +64,17 @@ export default function GalaxyScene({stars,selection,request,onSelect,showLandma
   const emissionTexture=makeGalacticEmissionTexture();
   const emission=new THREE.Mesh(new THREE.PlaneGeometry(107520,107520),new THREE.MeshBasicMaterial({map:emissionTexture,transparent:true,opacity:.85,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));emission.rotation.x=-Math.PI/2;emission.position.y=-5;scene.add(emission);
   const core=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,color:0xffd5a0,transparent:true,opacity:.27,blending:THREE.AdditiveBlending,depthWrite:false}));core.scale.set(27000,27000,1);scene.add(core);
-  const sun=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,color:0xffe6a4,transparent:true,depthWrite:false,depthTest:false}));sun.position.set(SUN_GALACTIC_RADIUS_LY,0,0);scene.add(sun);
+  const sunMap=makeStarTexture({id:'sun',ci:.65});const sun=new THREE.Sprite(new THREE.SpriteMaterial({map:sunMap,transparent:true,depthWrite:false,depthTest:false}));sun.position.set(SUN_GALACTIC_RADIUS_LY,0,0);scene.add(sun);
   const center=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,color:0xffffff,transparent:true,depthWrite:false,depthTest:false}));scene.add(center);
   const highlight=new THREE.Sprite(new THREE.SpriteMaterial({transparent:true,depthWrite:false,depthTest:false}));scene.add(highlight);let portraitKey=null;
   // Hubble image-pointing markers are symbolic: position and distance are approximate,
-  // and no observed three-dimensional morphology or measured size is implied.
+  // and flat image thumbnails are not observed three-dimensional morphology or measured size.
   const landmarks=DEEP_SKY.map(object=>{
    const id='dso:'+object.id,position=vec(positionFromEquatorialLy(object.ra,object.dec,object.distanceLy));
-   const color=object.type.includes('cluster')?0xffd796:object.type==='Supernova remnant'?0xffaaad:0xa9cfff;
-   const marker=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,color,transparent:true,depthWrite:false,depthTest:false}));marker.position.copy(position);scene.add(marker);
+   const art=landmarkTexture(object);
+   const marker=new THREE.Sprite(new THREE.SpriteMaterial({map:art.texture,transparent:true,depthWrite:false,depthTest:false}));marker.position.copy(position);scene.add(marker);
    const labelMap=markerLabel(object.name),label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelMap,transparent:true,depthWrite:false,depthTest:false}));scene.add(label);
-   return {id,position,marker,label,labelMap};
+   return {id,position,marker,label,labelMap,art};
   });
   // HYG stars keep catalogue positions and approximate colour, with bounded,
   // symbolic brightness-based sprite sizes (not measured stellar radii).
@@ -72,36 +82,36 @@ export default function GalaxyScene({stars,selection,request,onSelect,showLandma
    uniforms:{fade:{value:1},pixelRatio:{value:Math.min(window.devicePixelRatio,1.5)}},
    vertexShader:`#include <common>
    #include <logdepthbuf_pars_vertex>
-   attribute vec3 color;attribute float brightness;varying vec3 vColor;varying float vBrightness;uniform float pixelRatio;
-   void main(){vColor=color;vBrightness=brightness;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_PointSize=(4.0+brightness*8.0)*pixelRatio;
+   attribute vec3 color;attribute float brightness;varying vec3 vColor;varying float vBrightness;varying float seed;uniform float pixelRatio;
+   void main(){vColor=color;vBrightness=brightness;seed=fract(sin(dot(position,vec3(12.9898,78.233,31.17)))*43758.5453)*6.283;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_PointSize=(12.0+brightness*8.0)*pixelRatio;
    #include <logdepthbuf_vertex>
    }`,
    fragmentShader:`#include <logdepthbuf_pars_fragment>
-   varying vec3 vColor;varying float vBrightness;uniform float fade;
+   varying vec3 vColor;varying float vBrightness;varying float seed;uniform float fade;
    void main(){
    #include <logdepthbuf_fragment>
-   float r=length(gl_PointCoord-vec2(.5))*2.0;if(r>1.0)discard;float core=exp(-r*r*16.0),halo=exp(-r*r*4.0)*.3;gl_FragColor=vec4(vColor,(core+halo)*fade*(.55+.45*vBrightness));
+   ${stellarFragment}
    #include <tonemapping_fragment>
    #include <colorspace_fragment>
-   }`,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
+   }`,transparent:true,depthWrite:false});
   const nearby=new THREE.Points(nearbyGeo,nearbyMat);scene.add(nearby);
   // Gaia is an optional, separately labelled observed-data layer. Its point size,
   // halo and colour ramp are illustrative; the render budget is adaptive.
   const gaiaGeo=new THREE.BufferGeometry(),gaiaMat=new THREE.ShaderMaterial({uniforms:{fade:{value:1},pixelRatio:{value:Math.min(window.devicePixelRatio,1.5)}},
    vertexShader:`#include <common>
    #include <logdepthbuf_pars_vertex>
-   attribute vec3 color; attribute float brightness; varying vec3 vColor; varying float vBrightness; uniform float pixelRatio;
-   void main(){vColor=color;vBrightness=brightness;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_PointSize=(2.0+brightness*4.5)*pixelRatio;
+   attribute vec3 color; attribute float brightness; varying vec3 vColor; varying float vBrightness; varying float seed; uniform float pixelRatio;
+   void main(){vColor=color;vBrightness=brightness;seed=fract(sin(dot(position,vec3(12.9898,78.233,31.17)))*43758.5453)*6.283;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_PointSize=(7.0+brightness*4.0)*pixelRatio;
    #include <logdepthbuf_vertex>
    }`,
    fragmentShader:`#include <logdepthbuf_pars_fragment>
-   varying vec3 vColor; varying float vBrightness; uniform float fade;
+   varying vec3 vColor; varying float vBrightness; varying float seed; uniform float fade;
    void main(){
    #include <logdepthbuf_fragment>
-   float r=length(gl_PointCoord-vec2(.5))*2.0;float core=exp(-r*r*12.0);float halo=exp(-r*r*3.5)*.18;float alpha=(core+halo)*fade*(.4+.6*vBrightness);if(r>1.0)discard;gl_FragColor=vec4(vColor,alpha);
+   ${stellarFragment}
    #include <tonemapping_fragment>
    #include <colorspace_fragment>
-   }`,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
+   }`,transparent:true,depthWrite:false});
   const gaiaPoints=new THREE.Points(gaiaGeo,gaiaMat);scene.add(gaiaPoints);
   let loadedGaia=null,gaiaDrawn=0,gaiaElapsed=0,gaiaFrames=0;
   // Connections show straight-line catalogue separations, never trajectories.
@@ -135,10 +145,10 @@ export default function GalaxyScene({stars,selection,request,onSelect,showLandma
    for(const marker of [sun,center,highlight]){const d=Math.max(1,camera.position.distanceTo(marker.position)),scale=marker===highlight?.16:.025;marker.scale.set(d*scale,d*scale,1);}
    // Labels are decluttered in screen space; the underlying marker positions never move.
    const used=[],ordered=[...landmarks].sort((a,b)=>(a.id===s.selection?-1:0)-(b.id===s.selection?-1:0)),up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
-   for(const item of ordered){const d=Math.max(1,camera.position.distanceTo(item.position));item.marker.visible=s.showLandmarks;item.marker.scale.set(d*(item.id===s.selection ? .035 : .021),d*(item.id===s.selection ? .035 : .021),1);item.label.position.copy(item.position).addScaledVector(up,d*.022);item.label.scale.set(d*.14,d*.026,1);const p=item.position.clone().project(camera),screenX=p.x*el.clientWidth/2,screenY=p.y*el.clientHeight/2;const clear=p.z>=-1&&p.z<=1&&Math.abs(p.x)<1.1&&Math.abs(p.y)<1.1&&!used.some(([x,y])=>Math.abs(x-screenX)<115&&Math.abs(y-screenY)<24);item.label.visible=s.showLandmarks&&(clear||item.id===s.selection);if(item.label.visible)used.push([screenX,screenY]);}
+   for(const item of ordered){const d=Math.max(1,camera.position.distanceTo(item.position));item.marker.visible=s.showLandmarks;item.marker.scale.set(d*(item.id===s.selection ? .18 : .045),d*(item.id===s.selection ? .18 : .045),1);item.label.position.copy(item.position).addScaledVector(up,d*(item.id===s.selection?.105:.032));item.label.scale.set(d*.14,d*.026,1);const p=item.position.clone().project(camera),screenX=p.x*el.clientWidth/2,screenY=p.y*el.clientHeight/2;const clear=p.z>=-1&&p.z<=1&&Math.abs(p.x)<1.1&&Math.abs(p.y)<1.1&&!used.some(([x,y])=>Math.abs(x-screenX)<115&&Math.abs(y-screenY)<24);item.label.visible=s.showLandmarks&&(clear||item.id===s.selection);if(item.label.visible)used.push([screenX,screenY]);}
    camera.near=Math.max(.005,dist*.00001);camera.updateProjectionMatrix();controls.update();post.render(s.effects);
   }
-  animate();return()=>{if(navigationRef.current===navigation)navigationRef.current=null;cancelAnimationFrame(frame);window.removeEventListener('resize',resize);renderer.domElement.removeEventListener('pointerdown',onDown);renderer.domElement.removeEventListener('pointerup',onUp);detachZoom();workerRequest++;worker?.terminate();delete el.setGalaxyDensity;controls.dispose();post.dispose();landmarks.forEach(item=>{item.marker.material.dispose();item.label.material.dispose();item.labelMap.dispose()});guideGeometry.dispose();guideMaterial.dispose();neighborGeometry.dispose();neighborMaterial.dispose();geo.dispose();hazeGeo.dispose();haze.material.dispose();knotsGeo.dispose();knotsLayer.material.dispose();cloud.geometry.dispose();cloud.material.dispose();cloudTexture.dispose();emission.geometry.dispose();emission.material.dispose();emissionTexture.dispose();nearbyGeo.dispose();nearbyMat.dispose();gaiaGeo.dispose();gaiaMat.dispose();galaxy.material.dispose();core.material.dispose();sun.material.dispose();center.material.dispose();highlight.material.map?.dispose();highlight.material.dispose();texture.dispose();renderer.dispose();el.removeChild(renderer.domElement);};
+  animate();return()=>{if(navigationRef.current===navigation)navigationRef.current=null;cancelAnimationFrame(frame);window.removeEventListener('resize',resize);renderer.domElement.removeEventListener('pointerdown',onDown);renderer.domElement.removeEventListener('pointerup',onUp);detachZoom();workerRequest++;worker?.terminate();delete el.setGalaxyDensity;controls.dispose();post.dispose();landmarks.forEach(item=>{item.marker.material.dispose();item.label.material.dispose();item.labelMap.dispose();item.art.dispose()});guideGeometry.dispose();guideMaterial.dispose();neighborGeometry.dispose();neighborMaterial.dispose();geo.dispose();hazeGeo.dispose();haze.material.dispose();knotsGeo.dispose();knotsLayer.material.dispose();cloud.geometry.dispose();cloud.material.dispose();cloudTexture.dispose();emission.geometry.dispose();emission.material.dispose();emissionTexture.dispose();nearbyGeo.dispose();nearbyMat.dispose();gaiaGeo.dispose();gaiaMat.dispose();galaxy.material.dispose();core.material.dispose();sun.material.dispose();sunMap.dispose();center.material.dispose();highlight.material.map?.dispose();highlight.material.dispose();texture.dispose();renderer.dispose();el.removeChild(renderer.domElement);};
  },[]);
  useEffect(()=>{mount.current?.setGalaxyDensity?.(density)},[density]);
  return <div ref={mount} className="galaxy-canvas" aria-label="Three dimensional Milky Way, nearby stars and deep-sky map. Drag to rotate, scroll to zoom."/>;

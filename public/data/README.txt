@@ -17,3 +17,10 @@ Further selected and repacked by this project, under the same licence. The sourc
 an incomplete, biased 100–500 pc inverse-parallax selection, not a whole-galaxy map.
 See gaia-dr3-1m.json, the project README and scripts/prepare-gaia.py for selection,
 provenance, citation and the full Gaia acknowledgement.
+
+SI generation disclosure
+
+The code that prepares and displays these datasets and the illustrative mission model
+were developed with SI (AI) assistance. HYG, Gaia and other externally sourced
+catalogue data are not SI-generated; their sources, adaptations and licences remain
+as described above and in the project README. See /si-generation.json for metadata.

@@ -1,0 +1,17 @@
+{
+  "description": "SI (AI) generation disclosure for HELIO-FORGE.",
+  "code": "Project code was developed with SI assistance using Arena.ai, guided by human project direction and prompts.",
+  "data": "The mission model's illustrative rules and parameters were developed with SI assistance. Its simulated results are deterministic calculations, not observations. External scientific catalogues are sourced datasets, not SI-generated; see data/README.txt and the project README for provenance and licences.",
+  "images": {
+    "description": "SI-generated (AI-generated) concept artwork, not observations. Files include a visible watermark and a JPEG comment; in-app labels supplement these for cropped or projected display.",
+    "files": [
+      "graphics/artistic-deep-space.jpg",
+      "graphics/mission-orbit-hero.jpg",
+      "graphics/mission-wildfire.jpg",
+      "graphics/mission-ocean.jpg",
+      "graphics/mission-atmosphere.jpg"
+    ]
+  },
+  "audio": "No SI-generated audio is bundled with the project.",
+  "video": "No SI-generated video is bundled with the project."
+}

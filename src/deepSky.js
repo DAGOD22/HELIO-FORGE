@@ -15,7 +15,7 @@ export const DEEP_SKY=[
  {id:'hercules',name:'Hercules Cluster',designation:'M13 · NGC 6205',type:'Globular cluster',ra:hms(16,41,41.63),dec:dms(1,36,27,40.71),distanceLy:25000,constellation:'Hercules',description:'A globular cluster of more than 100,000 stars, gravitationally bound in a dense roughly spherical group.',source:'https://science.nasa.gov/asset/hubble/hubble-acswfpc2-image-of-globular-cluster-m13/',distanceNote:'Hubble lists approximately 25,000 ly.'}
 ];
 export const DEEP_SKY_BY_ID=Object.fromEntries(DEEP_SKY.map(object=>['dso:'+object.id,object]));
-// Separately displayed 2-D NASA observations, not textures for the 3-D markers.
+// 2-D NASA observations also used as flat symbolic marker thumbnails, never 3-D models.
 export const DEEP_SKY_IMAGES={
  orion:{file:'orion.jpg',source:'https://science.nasa.gov/image-detail/orion-nebula-xlarge_web/',credit:'NASA, ESA, M. Robberto (STScI/ESA) and the Hubble Space Telescope Orion Treasury Project Team',note:'Hubble mosaic with ground-based images filling gaps; multiple wavelengths.'},
  'southern-ring':{file:'southern-ring.jpg',source:'https://science.nasa.gov/asset/hubble/a-glowing-pool-of-light-planetary-nebula-ngc-3132/',credit:'The Hubble Heritage Team (STScI/AURA/NASA)',note:'Hubble observation; processed color composite.'},
